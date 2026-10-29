@@ -1,0 +1,196 @@
+{
+  "clean": {
+    "expected_outcome": "correct",
+    "description": "Valid baseline with one strategic deal, one Salesforce longtail deal, and one CareBridge deal.",
+    "operations": []
+  },
+  "carebridge_annual": {
+    "expected_outcome": "correct",
+    "description": "A CareBridge annual amount is used without annualization.",
+    "operations": [
+      {"action": "set", "dataset": "carebridge", "match": {"HubSpot_Deal_ID": "HS-CLEAN-1"}, "values": {"Amount": "120000", "Billing_Frequency": "Annual"}}
+    ]
+  },
+  "exact_duplicate": {
+    "expected_outcome": "correct",
+    "description": "An exact Salesforce copy is collapsed and audited.",
+    "operations": [
+      {"action": "copy_row", "dataset": "current", "match": {"Opportunity_ID": "006TEST00000002AAA"}}
+    ]
+  },
+  "scorecard_probability_mismatch": {
+    "expected_outcome": "correct",
+    "description": "The workbook probability differs from the deterministic GPA rule.",
+    "operations": [
+      {"action": "set", "dataset": "scorecard", "match": {"Opportunity_ID_15": "006TEST00000001"}, "values": {"Win_Probability": 0.5}}
+    ]
+  },
+  "closed_lost_salesforce": {
+    "expected_outcome": "correct",
+    "description": "A Salesforce Closed Lost record carries a nonzero source probability that must become zero.",
+    "operations": [
+      {"action": "copy_row", "dataset": "current", "match": {"Opportunity_ID": "006TEST00000002AAA"}, "values": {"Opportunity_ID": "006TEST00000003AAA", "Health_System": "Closed Lost Health", "Stage": "Closed Lost", "Stage_Probability": "0.40"}},
+      {"action": "copy_row", "dataset": "prior", "match": {"Opportunity_ID": "006TEST00000002AAA"}, "values": {"Opportunity_ID": "006TEST00000003AAA", "Health_System": "Closed Lost Health", "Stage": "Technical Validation", "Stage_Probability": "0.40"}}
+    ]
+  },
+  "closed_lost_carebridge": {
+    "expected_outcome": "correct",
+    "description": "A CareBridge Closed Lost record carries a nonzero source probability that must become zero.",
+    "operations": [
+      {"action": "copy_row", "dataset": "carebridge", "match": {"HubSpot_Deal_ID": "HS-CLEAN-1"}, "values": {"HubSpot_Deal_ID": "HS-CLOSED-1", "Company_Name": "Closed CareBridge Deal", "Deal_Stage": "Closed Lost", "Stage_Probability": "0.30", "Amount": "120000", "Billing_Frequency": "Annual"}}
+    ]
+  },
+  "equivalent_cross_source": {
+    "expected_outcome": "correct",
+    "description": "Equivalent Salesforce and CareBridge records are counted once.",
+    "operations": [
+      {"action": "copy_row", "dataset": "current", "match": {"Opportunity_ID": "006TEST00000002AAA"}, "values": {"Opportunity_ID": "006TEST00000004AAA", "Health_System": "Shared Post-Acute Care", "Product": "CareBridge", "Stage": "Contract Negotiations", "Stage_Probability": "0.80", "Amount": "180000", "Close_Date": "2026-12-01", "Sales_Rep": "Shared Owner"}},
+      {"action": "set", "dataset": "carebridge", "match": {"HubSpot_Deal_ID": "HS-CLEAN-1"}, "values": {"Company_Name": "Shared Post-Acute Care", "AE_Owner": "Shared Owner", "Amount": "15000", "Billing_Frequency": "Monthly", "Expected_Close_Date": "2026-12-01"}}
+    ]
+  },
+  "two_conflicting_duplicates": {
+    "expected_outcome": "correct",
+    "description": "Two financially conflicting but identity-consistent rows remain forecast variants.",
+    "operations": [
+      {"action": "copy_row", "dataset": "current", "match": {"Opportunity_ID": "006TEST00000002AAA"}, "values": {"Stage": "Contract Negotiations", "Stage_Probability": "0.80", "Amount": "200000"}}
+    ]
+  },
+  "mixed_exact_and_conflicting_duplicates": {
+    "expected_outcome": "correct",
+    "description": "Exact copies do not increase the number of distinct conflicting variants.",
+    "operations": [
+      {"action": "copy_row", "dataset": "current", "match": {"Opportunity_ID": "006TEST00000002AAA"}},
+      {"action": "copy_row", "dataset": "current", "match": {"Opportunity_ID": "006TEST00000002AAA"}, "values": {"Amount": "200000", "Stage": "Contract Negotiations", "Stage_Probability": "0.80"}},
+      {"action": "copy_row", "dataset": "current", "match": {"Opportunity_ID": "006TEST00000002AAA"}, "values": {"Amount": "300000", "Stage": "Technical Validation", "Stage_Probability": "0.40"}}
+    ]
+  },
+  "duplicate_identity_disagreement": {
+    "expected_outcome": "human_review",
+    "description": "Rows sharing an opportunity ID disagree on the customer identity.",
+    "operations": [
+      {"action": "copy_row", "dataset": "current", "match": {"Opportunity_ID": "006TEST00000002AAA"}, "values": {"Health_System": "Different Health System", "Amount": "200000"}}
+    ]
+  },
+  "cross_source_value_conflict": {
+    "expected_outcome": "human_review",
+    "description": "Likely cross-source duplicates disagree on annual value.",
+    "operations": [
+      {"action": "copy_row", "dataset": "current", "match": {"Opportunity_ID": "006TEST00000002AAA"}, "values": {"Opportunity_ID": "006TEST00000004AAA", "Health_System": "Shared Post-Acute Care", "Product": "CareBridge", "Stage": "Contract Negotiations", "Stage_Probability": "0.80", "Amount": "180000", "Close_Date": "2026-12-01", "Sales_Rep": "Shared Owner"}},
+      {"action": "set", "dataset": "carebridge", "match": {"HubSpot_Deal_ID": "HS-CLEAN-1"}, "values": {"Company_Name": "Shared Post-Acute Care", "AE_Owner": "Shared Owner", "Amount": "240000", "Billing_Frequency": "Annual", "Expected_Close_Date": "2026-12-01"}}
+    ]
+  },
+  "active_stage_probability_mismatch": {
+    "expected_outcome": "human_review",
+    "description": "An active Salesforce probability conflicts with the probability defined for its stage.",
+    "operations": [
+      {"action": "set", "dataset": "current", "match": {"Opportunity_ID": "006TEST00000002AAA"}, "values": {"Stage_Probability": "0.75"}}
+    ]
+  },
+  "missing_scorecard_id": {
+    "expected_outcome": "correct",
+    "description": "A blank scorecard ID is automatically mapped from one exact hospital, product, and sales rep match.",
+    "operations": [
+      {"action": "set", "dataset": "scorecard", "match": {"Opportunity_ID_15": "006TEST00000001"}, "values": {"Opportunity_ID_15": null, "Hospital_Shorthand_Name": "Clean Strategic Health System"}}
+    ]
+  },
+  "missing_scorecard_id_identity_mismatch": {
+    "expected_outcome": "human_review",
+    "description": "A blank scorecard ID has no exact hospital, product, and sales rep match.",
+    "operations": [
+      {"action": "set", "dataset": "scorecard", "match": {"Opportunity_ID_15": "006TEST00000001"}, "values": {"Opportunity_ID_15": null, "Hospital_Shorthand_Name": "Different Strategic Hospital"}}
+    ]
+  },
+  "two_scorecard_rows_same_hospital": {
+    "expected_outcome": "correct",
+    "description": "Two blank-ID scorecard rows for the same hospital are independently resolved by source row.",
+    "operations": [
+      {"action": "copy_row", "dataset": "current", "match": {"Opportunity_ID": "006TEST00000001AAA"}, "values": {"Opportunity_ID": "006TEST00000003AAA", "Amount": "750000"}},
+      {"action": "set", "dataset": "scorecard", "match": {"Opportunity_ID_15": "006TEST00000001"}, "values": {"Opportunity_ID_15": null, "Hospital_Shorthand_Name": "Shared Hospital"}},
+      {"action": "copy_row", "dataset": "scorecard", "match": {"Hospital_Shorthand_Name": "Shared Hospital"}, "values": {"Rank": 2, "Opportunity_ID_15": null}}
+    ]
+  },
+  "unmatched_scorecard_id": {
+    "expected_outcome": "human_review",
+    "description": "A supplied scorecard ID has no current Salesforce match.",
+    "operations": [
+      {"action": "set", "dataset": "scorecard", "match": {"Opportunity_ID_15": "006TEST00000001"}, "values": {"Opportunity_ID_15": "006TEST99999999"}}
+    ]
+  },
+  "invalid_negative_amount": {
+    "expected_outcome": "invalid_data",
+    "description": "A Salesforce amount is negative.",
+    "operations": [
+      {"action": "set", "dataset": "current", "match": {"Opportunity_ID": "006TEST00000002AAA"}, "values": {"Amount": "-1"}}
+    ]
+  },
+  "invalid_probability": {
+    "expected_outcome": "invalid_data",
+    "description": "A Salesforce probability exceeds one.",
+    "operations": [
+      {"action": "set", "dataset": "current", "match": {"Opportunity_ID": "006TEST00000002AAA"}, "values": {"Stage_Probability": "1.25"}}
+    ]
+  },
+  "invalid_billing_frequency": {
+    "expected_outcome": "invalid_data",
+    "description": "A source record uses an unsupported billing frequency.",
+    "operations": [
+      {"action": "set", "dataset": "current", "match": {"Opportunity_ID": "006TEST00000002AAA"}, "values": {"Billing_Frequency": "Quarterly"}}
+    ]
+  },
+  "invalid_opportunity_id": {
+    "expected_outcome": "invalid_data",
+    "description": "A Salesforce opportunity ID is malformed.",
+    "operations": [
+      {"action": "set", "dataset": "current", "match": {"Opportunity_ID": "006TEST00000002AAA"}, "values": {"Opportunity_ID": "bad-id"}}
+    ]
+  },
+  "invalid_stage": {
+    "expected_outcome": "invalid_data",
+    "description": "A Salesforce record contains an impossible stage.",
+    "operations": [
+      {"action": "set", "dataset": "current", "match": {"Opportunity_ID": "006TEST00000002AAA"}, "values": {"Stage": "Impossible Stage"}}
+    ]
+  },
+  "invalid_close_date": {
+    "expected_outcome": "invalid_data",
+    "description": "An active Salesforce record contains an invalid close date.",
+    "operations": [
+      {"action": "set", "dataset": "current", "match": {"Opportunity_ID": "006TEST00000002AAA"}, "values": {"Close_Date": "not-a-date"}}
+    ]
+  },
+  "stale_close_date": {
+    "expected_outcome": "correct",
+    "description": "An active Q4 deal has a valid close date before the reporting date.",
+    "operations": [
+      {"action": "set", "dataset": "current", "match": {"Opportunity_ID": "006TEST00000002AAA"}, "values": {"Close_Date": "2026-10-01"}}
+    ]
+  },
+  "weak_cross_source_similarity": {
+    "expected_outcome": "correct",
+    "description": "A similar customer name without matching owner and close date is not merged.",
+    "operations": [
+      {"action": "copy_row", "dataset": "current", "match": {"Opportunity_ID": "006TEST00000002AAA"}, "values": {"Opportunity_ID": "006TEST00000005AAA", "Health_System": "Clean Post Acute Care", "Product": "CareBridge", "Sales_Rep": "Different Owner", "Close_Date": "2026-11-15"}}
+    ]
+  },
+  "missing_required_column": {
+    "expected_outcome": "invalid_data",
+    "description": "The current Salesforce export is missing the required Amount column.",
+    "operations": [
+      {"action": "remove_column", "dataset": "current", "column": "Amount"}
+    ]
+  },
+  "invalid_carebridge_probability": {
+    "expected_outcome": "invalid_data",
+    "description": "A CareBridge probability exceeds one.",
+    "operations": [
+      {"action": "set", "dataset": "carebridge", "match": {"HubSpot_Deal_ID": "HS-CLEAN-1"}, "values": {"Stage_Probability": "1.25"}}
+    ]
+  },
+  "invalid_scorecard_score": {
+    "expected_outcome": "invalid_data",
+    "description": "A VP score falls outside the allowed one-to-four range.",
+    "operations": [
+      {"action": "set", "dataset": "scorecard", "match": {"Opportunity_ID_15": "006TEST00000001"}, "values": {"Leadership_Score": 5}}
+    ]
+  }
+}

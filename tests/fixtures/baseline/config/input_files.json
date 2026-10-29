@@ -1,0 +1,6 @@
+{
+  "salesforce_current": "1_sfdc_pipeline_current.csv",
+  "salesforce_prior": "2_sfdc_pipeline_prior_week.csv",
+  "vp_scorecard": "3_vp_deal_scorecard.xlsx",
+  "carebridge_current": "4_carebridge_hubspot_export.csv"
+}

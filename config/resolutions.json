@@ -1,0 +1,26 @@
+{
+  "scorecard_mappings": [
+    {
+      "source_row": 9,
+      "opportunity_id": "006PF000001T005YAC",
+      "reason": "Confirmed against the current Salesforce pipeline"
+    },
+    {
+      "source_row": 10,
+      "opportunity_id": "006PF000001T006YAC",
+      "reason": "Confirmed against the current Salesforce pipeline"
+    },
+    {
+      "source_row": 11,
+      "opportunity_id": "006PF000001T007YAC",
+      "reason": "Confirmed against the current Salesforce pipeline"
+    },
+    {
+      "source_row": 12,
+      "opportunity_id": "006PF000001T008YAC",
+      "reason": "Confirmed against the current Salesforce pipeline"
+    }
+  ],
+  "duplicate_selections": [],
+  "record_overrides": []
+}

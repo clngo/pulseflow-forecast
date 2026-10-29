@@ -1,0 +1,1573 @@
+{
+  "schema_version": 1,
+  "reporting_date": "2026-10-15",
+  "generated_at": "2026-10-29T20:29:07Z",
+  "board_target": 12000000,
+  "summary": {
+    "total_expected_sales": 12982400.0,
+    "top_8_expected_value": 7840000.0,
+    "salesforce_longtail_expected_value": 4294000.0,
+    "carebridge_longtail_expected_value": 848400.0,
+    "variance_to_target": 982400.0,
+    "baseline_status": "valid_with_unresolved_variants",
+    "unresolved_variant_count": 1
+  },
+  "deals": [
+    {
+      "opportunity_id": "006PF000001T001YAC",
+      "canonical_id": "006PF000001T001",
+      "source": "salesforce",
+      "source_row": 24,
+      "health_system": "Aethelgard Health System (AKA Aethelgard Regional Medical)",
+      "product": "PulseOR",
+      "sales_rep": "Arthur Pendelton",
+      "region": "Northeast",
+      "fiscal_period": "Q4-2026",
+      "stage": "Contract Negotiations",
+      "stage_probability": 0.8,
+      "close_date": "2026-11-30",
+      "original_amount": 2400000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 2400000.0,
+      "forecast_bucket": "top_8",
+      "top_8_scores": {
+        "leadership": 4,
+        "commercial": 4,
+        "contractual": 3,
+        "composite_gpa": 3.4
+      },
+      "vp_notes": "MSA redlines with legal; C-suite fully aligned for Nov close.",
+      "probability": 0.75,
+      "expected_value": 1800000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001T006YAC",
+      "canonical_id": "006PF000001T006",
+      "source": "salesforce",
+      "source_row": 29,
+      "health_system": "Borealis Health Alliance - Main Campus",
+      "product": "PulseOR",
+      "sales_rep": "Clara Oswald",
+      "region": "West",
+      "fiscal_period": "Q4-2026",
+      "stage": "Technical Validation",
+      "stage_probability": 0.4,
+      "close_date": "2026-12-10",
+      "original_amount": 1600000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 1600000.0,
+      "forecast_bucket": "top_8",
+      "top_8_scores": {
+        "leadership": 3,
+        "commercial": 2,
+        "contractual": 1,
+        "composite_gpa": 1.6
+      },
+      "vp_notes": "Phase 1 Main Campus hospital OR rollout; IT security review taking longer than expected, regressed from Business Approval.",
+      "probability": 0.3,
+      "expected_value": 480000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001T008YAC",
+      "canonical_id": "006PF000001T008",
+      "source": "salesforce",
+      "source_row": 31,
+      "health_system": "Halcyon Medical Group (FKA Halcyon Health)",
+      "product": "BedFlow",
+      "sales_rep": "Julian Bashir",
+      "region": "Midwest",
+      "fiscal_period": "Q4-2026",
+      "stage": "Introduction",
+      "stage_probability": 0.2,
+      "close_date": "2026-12-28",
+      "original_amount": 2000000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 2000000.0,
+      "forecast_bucket": "top_8",
+      "top_8_scores": {
+        "leadership": 2,
+        "commercial": 1,
+        "contractual": 1,
+        "composite_gpa": 1.2
+      },
+      "vp_notes": "Early stage; likely slips to Q1 unless CEO steps in.",
+      "probability": 0.1,
+      "expected_value": 200000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001T005YAC",
+      "canonical_id": "006PF000001T005",
+      "source": "salesforce",
+      "source_row": 28,
+      "health_system": "Ironwood Clinical Center & Health System",
+      "product": "BedFlow",
+      "sales_rep": "Victor Vonnegut",
+      "region": "Southeast",
+      "fiscal_period": "Q4-2026",
+      "stage": "Contract Negotiations",
+      "stage_probability": 0.8,
+      "close_date": "2026-12-22",
+      "original_amount": 2200000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 2200000.0,
+      "forecast_bucket": "top_8",
+      "top_8_scores": {
+        "leadership": 4,
+        "commercial": 2,
+        "contractual": 2,
+        "composite_gpa": 2.4
+      },
+      "vp_notes": "COO verbally committed to Dec signature this morning; VP manually overrode Win_Probability cell to 75% (formula GPA 2.40 = 50%).",
+      "probability": 0.5,
+      "expected_value": 1100000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001T002YAC",
+      "canonical_id": "006PF000001T002",
+      "source": "salesforce",
+      "source_row": 25,
+      "health_system": "Solaris Medical System (FKA Solaris Health Group)",
+      "product": "BedFlow",
+      "sales_rep": "Clara Oswald",
+      "region": "West",
+      "fiscal_period": "Q4-2026",
+      "stage": "Contract Negotiations",
+      "stage_probability": 0.8,
+      "close_date": "2026-12-15",
+      "original_amount": 3000000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 3000000.0,
+      "forecast_bucket": "top_8",
+      "top_8_scores": {
+        "leadership": 4,
+        "commercial": 3,
+        "contractual": 3,
+        "composite_gpa": 3.2
+      },
+      "vp_notes": "Expanded scope from 4 to 5 hospitals (+$400K ACV bump this week).",
+      "probability": 0.75,
+      "expected_value": 2250000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001T007YAC",
+      "canonical_id": "006PF000001T007",
+      "source": "salesforce",
+      "source_row": 30,
+      "health_system": "Starlight Oncology & Cancer Network",
+      "product": "InfusionIQ",
+      "sales_rep": "Kira Nerys",
+      "region": "Northeast",
+      "fiscal_period": "Q4-2026",
+      "stage": "Business Approval",
+      "stage_probability": 0.6,
+      "close_date": "2026-11-20",
+      "original_amount": 1200000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 1200000.0,
+      "forecast_bucket": "top_8",
+      "top_8_scores": {
+        "leadership": 2,
+        "commercial": 2,
+        "contractual": 2,
+        "composite_gpa": 2.0
+      },
+      "vp_notes": "Board committee meeting scheduled for Nov 5.",
+      "probability": 0.3,
+      "expected_value": 360000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001T003YAC",
+      "canonical_id": "006PF000001T003",
+      "source": "salesforce",
+      "source_row": 26,
+      "health_system": "Vanguard Meridian Health Network",
+      "product": "PulseOR",
+      "sales_rep": "Julian Bashir",
+      "region": "Midwest",
+      "fiscal_period": "Q4-2026",
+      "stage": "Business Approval",
+      "stage_probability": 0.6,
+      "close_date": "2026-12-18",
+      "original_amount": 1800000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 1800000.0,
+      "forecast_bucket": "top_8",
+      "top_8_scores": {
+        "leadership": 3,
+        "commercial": 3,
+        "contractual": 3,
+        "composite_gpa": 3.0
+      },
+      "vp_notes": "CFO reviewing multi-year ramp proposal.",
+      "probability": 0.5,
+      "expected_value": 900000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001T004YAC",
+      "canonical_id": "006PF000001T004",
+      "source": "salesforce",
+      "source_row": 27,
+      "health_system": "Zephyr Valley System (AKA Zephyr Regional Medical Group)",
+      "product": "InfusionIQ",
+      "sales_rep": "Selene Novak",
+      "region": "Midwest",
+      "fiscal_period": "Q4-2026",
+      "stage": "Business Approval",
+      "stage_probability": 0.6,
+      "close_date": "2026-11-25",
+      "original_amount": 1500000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 1500000.0,
+      "forecast_bucket": "top_8",
+      "top_8_scores": {
+        "leadership": 3,
+        "commercial": 3,
+        "contractual": 2,
+        "composite_gpa": 2.4
+      },
+      "vp_notes": "Awaiting final chair count sign-off across 12 oncology clinics.",
+      "probability": 0.5,
+      "expected_value": 750000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "HS-9006",
+      "canonical_id": "HS-9006",
+      "source": "carebridge",
+      "source_row": 8,
+      "health_system": "Borealis Care Transitions",
+      "product": "CareBridge",
+      "sales_rep": "Dax Shepherdson",
+      "region": null,
+      "fiscal_period": "Q4-2026",
+      "stage": "Contract Sent",
+      "stage_probability": 0.8,
+      "close_date": "2026-11-28",
+      "original_amount": 210000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 210000.0,
+      "forecast_bucket": "carebridge_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.8,
+      "expected_value": 168000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "HS-9008",
+      "canonical_id": "HS-9008",
+      "source": "carebridge",
+      "source_row": 10,
+      "health_system": "Halcyon Senior Living",
+      "product": "CareBridge",
+      "sales_rep": "Rowan Sterling",
+      "region": null,
+      "fiscal_period": "Q4-2026",
+      "stage": "Qualified to Buy",
+      "stage_probability": 0.4,
+      "close_date": "2026-12-18",
+      "original_amount": 140000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 140000.0,
+      "forecast_bucket": "carebridge_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.4,
+      "expected_value": 56000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "HS-9009",
+      "canonical_id": "HS-9009",
+      "source": "carebridge",
+      "source_row": 11,
+      "health_system": "Hyperion Transitions Group",
+      "product": "CareBridge",
+      "sales_rep": "Dax Shepherdson",
+      "region": null,
+      "fiscal_period": "Q4-2026",
+      "stage": "Decision Maker Bought-In",
+      "stage_probability": 0.6,
+      "close_date": "2026-12-02",
+      "original_amount": 190000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 190000.0,
+      "forecast_bucket": "carebridge_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.6,
+      "expected_value": 114000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "HS-9003",
+      "canonical_id": "HS-9003",
+      "source": "carebridge",
+      "source_row": 5,
+      "health_system": "Ironwood Post-Acute Network",
+      "product": "CareBridge",
+      "sales_rep": "Nora Valkyrie",
+      "region": null,
+      "fiscal_period": "Q4-2026",
+      "stage": "Decision Maker Bought-In",
+      "stage_probability": 0.6,
+      "close_date": "2026-12-05",
+      "original_amount": 12500.0,
+      "billing_frequency": "Monthly",
+      "annual_acv": 150000.0,
+      "forecast_bucket": "carebridge_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.6,
+      "expected_value": 90000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "HS-9010",
+      "canonical_id": "HS-9010",
+      "source": "carebridge",
+      "source_row": 12,
+      "health_system": "Obsidian Post-Acute Alliance",
+      "product": "CareBridge",
+      "sales_rep": "Rowan Sterling",
+      "region": null,
+      "fiscal_period": "Q4-2026",
+      "stage": "Introduction",
+      "stage_probability": 0.2,
+      "close_date": "2026-12-22",
+      "original_amount": 110000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 110000.0,
+      "forecast_bucket": "carebridge_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.2,
+      "expected_value": 22000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "HS-9002",
+      "canonical_id": "HS-9002",
+      "source": "carebridge",
+      "source_row": 3,
+      "health_system": "Solaris Transitions Network",
+      "product": "CareBridge",
+      "sales_rep": "Dax Shepherdson",
+      "region": null,
+      "fiscal_period": "Q4-2026",
+      "stage": "Contract Sent",
+      "stage_probability": 0.8,
+      "close_date": "2026-11-20",
+      "original_amount": 20000.0,
+      "billing_frequency": "Monthly",
+      "annual_acv": 240000.0,
+      "forecast_bucket": "carebridge_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.8,
+      "expected_value": 192000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "HS-9007",
+      "canonical_id": "HS-9007",
+      "source": "carebridge",
+      "source_row": 9,
+      "health_system": "Starlight Skilled Nursing",
+      "product": "CareBridge",
+      "sales_rep": "Nora Valkyrie",
+      "region": null,
+      "fiscal_period": "Q4-2026",
+      "stage": "Decision Maker Bought-In",
+      "stage_probability": 0.6,
+      "close_date": "2026-12-10",
+      "original_amount": 160000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 160000.0,
+      "forecast_bucket": "carebridge_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.6,
+      "expected_value": 96000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "HS-9005",
+      "canonical_id": "HS-9005",
+      "source": "carebridge",
+      "source_row": 7,
+      "health_system": "Vanguard Rehab Centers",
+      "product": "CareBridge",
+      "sales_rep": "Rowan Sterling",
+      "region": null,
+      "fiscal_period": "Q4-2026",
+      "stage": "Qualified to Buy",
+      "stage_probability": 0.4,
+      "close_date": "2026-12-12",
+      "original_amount": 8000.0,
+      "billing_frequency": "Monthly",
+      "annual_acv": 96000.0,
+      "forecast_bucket": "carebridge_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.4,
+      "expected_value": 38400.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "HS-9004",
+      "canonical_id": "HS-9004",
+      "source": "carebridge",
+      "source_row": 6,
+      "health_system": "Zephyr Valley Senior Care",
+      "product": "CareBridge",
+      "sales_rep": "Nora Valkyrie",
+      "region": null,
+      "fiscal_period": "Q4-2026",
+      "stage": "Decision Maker Bought-In",
+      "stage_probability": 0.6,
+      "close_date": "2026-10-08",
+      "original_amount": 10000.0,
+      "billing_frequency": "Monthly",
+      "annual_acv": 120000.0,
+      "forecast_bucket": "carebridge_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.6,
+      "expected_value": 72000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001M001YAC",
+      "canonical_id": "006PF000001M001",
+      "source": "salesforce",
+      "source_row": 32,
+      "health_system": "Aethelgard Post-Acute Care",
+      "product": "CareBridge",
+      "sales_rep": "Dax Shepherdson",
+      "region": "Northeast",
+      "fiscal_period": "Q4-2026",
+      "stage": "Contract Negotiations",
+      "stage_probability": 0.8,
+      "close_date": "2026-11-15",
+      "original_amount": 180000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 180000.0,
+      "forecast_bucket": "salesforce_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.8,
+      "expected_value": 144000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001L009YAC",
+      "canonical_id": "006PF000001L009",
+      "source": "salesforce",
+      "source_row": 12,
+      "health_system": "Alabaster Medical Center",
+      "product": "InfusionIQ",
+      "sales_rep": "Clara Oswald",
+      "region": "West",
+      "fiscal_period": "Q4-2026",
+      "stage": "Business Approval",
+      "stage_probability": 0.6,
+      "close_date": "2026-12-01",
+      "original_amount": 350000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 350000.0,
+      "forecast_bucket": "salesforce_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.6,
+      "expected_value": 210000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001L020YAC",
+      "canonical_id": "006PF000001L020",
+      "source": "salesforce",
+      "source_row": 2,
+      "health_system": "Borealis Health Alliance - North Surgery Clinic",
+      "product": "PulseOR",
+      "sales_rep": "Kira Nerys",
+      "region": "West",
+      "fiscal_period": "Q4-2026",
+      "stage": "Contract Negotiations",
+      "stage_probability": 0.8,
+      "close_date": "2026-11-24",
+      "original_amount": 300000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 300000.0,
+      "forecast_bucket": "salesforce_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.8,
+      "expected_value": 240000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001L016YAC",
+      "canonical_id": "006PF000001L016",
+      "source": "salesforce",
+      "source_row": 20,
+      "health_system": "Briarwood Health Partners",
+      "product": "InfusionIQ",
+      "sales_rep": "Selene Novak",
+      "region": "Midwest",
+      "fiscal_period": "Q4-2026",
+      "stage": "Contract Negotiations",
+      "stage_probability": 0.8,
+      "close_date": "2026-11-19",
+      "original_amount": 250000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 250000.0,
+      "forecast_bucket": "salesforce_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.8,
+      "expected_value": 200000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001L008YAC",
+      "canonical_id": "006PF000001L008",
+      "source": "salesforce",
+      "source_row": 10,
+      "health_system": "Caledonia General Health",
+      "product": "PulseOR",
+      "sales_rep": "Arthur Pendelton",
+      "region": "Northeast",
+      "fiscal_period": "Q4-2026",
+      "stage": "Business Approval",
+      "stage_probability": 0.6,
+      "close_date": "2026-11-18",
+      "original_amount": 400000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 400000.0,
+      "forecast_bucket": "salesforce_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.6,
+      "expected_value": 240000.0,
+      "source_conflict": {
+        "status": "unresolved",
+        "baseline_source_row": 10,
+        "variants": [
+          {
+            "source_row": 10,
+            "stage": "Business Approval",
+            "stage_probability": 0.6,
+            "amount": 400000.0,
+            "annual_acv": 400000.0,
+            "expected_value": 240000.0
+          },
+          {
+            "source_row": 11,
+            "stage": "Contract Negotiations",
+            "stage_probability": 0.8,
+            "amount": 550000.0,
+            "annual_acv": 550000.0,
+            "expected_value": 440000.0
+          }
+        ]
+      }
+    },
+    {
+      "opportunity_id": "006PF000001L014YAC",
+      "canonical_id": "006PF000001L014",
+      "source": "salesforce",
+      "source_row": 17,
+      "health_system": "Cascadia Crest Medical",
+      "product": "PulseOR",
+      "sales_rep": "Clara Oswald",
+      "region": "West",
+      "fiscal_period": "Q4-2026",
+      "stage": "Contract Negotiations",
+      "stage_probability": 0.8,
+      "close_date": "2026-11-15",
+      "original_amount": 400000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 400000.0,
+      "forecast_bucket": "salesforce_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.8,
+      "expected_value": 320000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001L005YAC",
+      "canonical_id": "006PF000001L005",
+      "source": "salesforce",
+      "source_row": 7,
+      "health_system": "Celestial Cancer Institute",
+      "product": "InfusionIQ",
+      "sales_rep": "Kira Nerys",
+      "region": "Northeast",
+      "fiscal_period": "Q4-2026",
+      "stage": "Introduction",
+      "stage_probability": 0.2,
+      "close_date": "2026-12-15",
+      "original_amount": 250000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 250000.0,
+      "forecast_bucket": "salesforce_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.2,
+      "expected_value": 50000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001L001YAC",
+      "canonical_id": "006PF000001L001",
+      "source": "salesforce",
+      "source_row": 3,
+      "health_system": "Hyperion Health System",
+      "product": "PulseOR",
+      "sales_rep": "Arthur Pendelton",
+      "region": "Northeast",
+      "fiscal_period": "Q4-2026",
+      "stage": "Contract Negotiations",
+      "stage_probability": 0.8,
+      "close_date": "2026-10-05",
+      "original_amount": 450000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 450000.0,
+      "forecast_bucket": "salesforce_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.8,
+      "expected_value": 360000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001L013YAC",
+      "canonical_id": "006PF000001L013",
+      "source": "salesforce",
+      "source_row": 16,
+      "health_system": "Kestrel Regional Health",
+      "product": "BedFlow",
+      "sales_rep": "Victor Vonnegut",
+      "region": "Southeast",
+      "fiscal_period": "Q4-2026",
+      "stage": "Business Approval",
+      "stage_probability": 0.6,
+      "close_date": "2026-11-29",
+      "original_amount": 500000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 500000.0,
+      "forecast_bucket": "salesforce_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.6,
+      "expected_value": 300000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001L010YAC",
+      "canonical_id": "006PF000001L010",
+      "source": "salesforce",
+      "source_row": 13,
+      "health_system": "Mirage State Health System",
+      "product": "BedFlow",
+      "sales_rep": "Victor Vonnegut",
+      "region": "Southeast",
+      "fiscal_period": "Q4-2026",
+      "stage": "Technical Validation",
+      "stage_probability": 0.4,
+      "close_date": "2026-12-12",
+      "original_amount": 450000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 450000.0,
+      "forecast_bucket": "salesforce_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.4,
+      "expected_value": 180000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001L007YAC",
+      "canonical_id": "006PF000001L007",
+      "source": "salesforce",
+      "source_row": 9,
+      "health_system": "Nebula Health Alliance",
+      "product": "PulseOR",
+      "sales_rep": "Arthur Pendelton",
+      "region": "Northeast",
+      "fiscal_period": "Q4-2026",
+      "stage": "Business Approval",
+      "stage_probability": 0.6,
+      "close_date": "2026-11-28",
+      "original_amount": 600000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 600000.0,
+      "forecast_bucket": "salesforce_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.6,
+      "expected_value": 360000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001L002YAC",
+      "canonical_id": "006PF000001L002",
+      "source": "salesforce",
+      "source_row": 4,
+      "health_system": "Obsidian Health Network",
+      "product": "InfusionIQ",
+      "sales_rep": "Selene Novak",
+      "region": "Midwest",
+      "fiscal_period": "Q4-2026",
+      "stage": "Business Approval",
+      "stage_probability": 0.6,
+      "close_date": "2026-10-10",
+      "original_amount": 300000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 300000.0,
+      "forecast_bucket": "salesforce_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.6,
+      "expected_value": 180000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001L015YAC",
+      "canonical_id": "006PF000001L015",
+      "source": "salesforce",
+      "source_row": 19,
+      "health_system": "Palisades Surgical Network",
+      "product": "PulseOR",
+      "sales_rep": "Kira Nerys",
+      "region": "Northeast",
+      "fiscal_period": "Q4-2026",
+      "stage": "Technical Validation",
+      "stage_probability": 0.4,
+      "close_date": "2026-12-14",
+      "original_amount": 300000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 300000.0,
+      "forecast_bucket": "salesforce_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.4,
+      "expected_value": 120000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001L011YAC",
+      "canonical_id": "006PF000001L011",
+      "source": "salesforce",
+      "source_row": 14,
+      "health_system": "Polaris Community Hospitals",
+      "product": "PulseOR",
+      "sales_rep": "Julian Bashir",
+      "region": "Midwest",
+      "fiscal_period": "Q4-2026",
+      "stage": "Contract Negotiations",
+      "stage_probability": 0.8,
+      "close_date": "2026-11-22",
+      "original_amount": 500000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 500000.0,
+      "forecast_bucket": "salesforce_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.8,
+      "expected_value": 400000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001L017YAC",
+      "canonical_id": "006PF000001L017",
+      "source": "salesforce",
+      "source_row": 21,
+      "health_system": "Redstone Desert Health System",
+      "product": "BedFlow",
+      "sales_rep": "Clara Oswald",
+      "region": "West",
+      "fiscal_period": "Q4-2026",
+      "stage": "Business Approval",
+      "stage_probability": 0.6,
+      "close_date": "2026-12-04",
+      "original_amount": 450000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 450000.0,
+      "forecast_bucket": "salesforce_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.6,
+      "expected_value": 270000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001L018YAC",
+      "canonical_id": "006PF000001L018",
+      "source": "salesforce",
+      "source_row": 22,
+      "health_system": "Silverlake Medical Center",
+      "product": "PulseOR",
+      "sales_rep": "Julian Bashir",
+      "region": "Midwest",
+      "fiscal_period": "Q4-2026",
+      "stage": "Technical Validation",
+      "stage_probability": 0.4,
+      "close_date": "2026-12-19",
+      "original_amount": 350000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 350000.0,
+      "forecast_bucket": "salesforce_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.4,
+      "expected_value": 140000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001L004YAC",
+      "canonical_id": "006PF000001L004",
+      "source": "salesforce",
+      "source_row": 6,
+      "health_system": "Solstice Surgical Partners",
+      "product": "PulseOR",
+      "sales_rep": "Victor Vonnegut",
+      "region": "Southeast",
+      "fiscal_period": "Q4-2026",
+      "stage": "Technical Validation",
+      "stage_probability": 0.4,
+      "close_date": "2026-12-05",
+      "original_amount": 350000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 350000.0,
+      "forecast_bucket": "salesforce_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.4,
+      "expected_value": 140000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001L019YAC",
+      "canonical_id": "006PF000001L019",
+      "source": "salesforce",
+      "source_row": 23,
+      "health_system": "Tidewater Regional Oncology",
+      "product": "InfusionIQ",
+      "sales_rep": "Kira Nerys",
+      "region": "Northeast",
+      "fiscal_period": "Q4-2026",
+      "stage": "Introduction",
+      "stage_probability": 0.2,
+      "close_date": "2026-12-21",
+      "original_amount": 200000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 200000.0,
+      "forecast_bucket": "salesforce_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.2,
+      "expected_value": 40000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001L003YAC",
+      "canonical_id": "006PF000001L003",
+      "source": "salesforce",
+      "source_row": 5,
+      "health_system": "Valkyrie Regional Medical",
+      "product": "BedFlow",
+      "sales_rep": "Victor Vonnegut",
+      "region": "Southeast",
+      "fiscal_period": "Q4-2026",
+      "stage": "Technical Validation",
+      "stage_probability": 0.4,
+      "close_date": "2026-10-12",
+      "original_amount": 500000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 500000.0,
+      "forecast_bucket": "salesforce_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.4,
+      "expected_value": 200000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001L006YAC",
+      "canonical_id": "006PF000001L006",
+      "source": "salesforce",
+      "source_row": 8,
+      "health_system": "Verdant Valley Hospital",
+      "product": "BedFlow",
+      "sales_rep": "Clara Oswald",
+      "region": "West",
+      "fiscal_period": "Q4-2026",
+      "stage": "Introduction",
+      "stage_probability": 0.2,
+      "close_date": "2026-12-20",
+      "original_amount": 400000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 400000.0,
+      "forecast_bucket": "salesforce_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.2,
+      "expected_value": 80000.0,
+      "source_conflict": null
+    },
+    {
+      "opportunity_id": "006PF000001L012YAC",
+      "canonical_id": "006PF000001L012",
+      "source": "salesforce",
+      "source_row": 15,
+      "health_system": "Windward Oncology Group",
+      "product": "InfusionIQ",
+      "sales_rep": "Selene Novak",
+      "region": "Midwest",
+      "fiscal_period": "Q4-2026",
+      "stage": "Business Approval",
+      "stage_probability": 0.6,
+      "close_date": "2026-12-08",
+      "original_amount": 200000.0,
+      "billing_frequency": "Annual",
+      "annual_acv": 200000.0,
+      "forecast_bucket": "salesforce_longtail",
+      "top_8_scores": null,
+      "vp_notes": null,
+      "probability": 0.6,
+      "expected_value": 120000.0,
+      "source_conflict": null
+    }
+  ],
+  "week_over_week": {
+    "new_deals": [
+      {
+        "opportunity_id": "006PF000001M001YAC",
+        "health_system": "Aethelgard Post-Acute Care",
+        "product": "CareBridge",
+        "sales_rep": "Dax Shepherdson",
+        "fiscal_period": "Q4-2026",
+        "stage": "Contract Negotiations",
+        "annual_acv": 180000.0
+      },
+      {
+        "opportunity_id": "006PF000001L005YAC",
+        "health_system": "Celestial Cancer Institute",
+        "product": "InfusionIQ",
+        "sales_rep": "Kira Nerys",
+        "fiscal_period": "Q4-2026",
+        "stage": "Introduction",
+        "annual_acv": 250000.0
+      },
+      {
+        "opportunity_id": "006PF000001L007YAC",
+        "health_system": "Nebula Health Alliance",
+        "product": "PulseOR",
+        "sales_rep": "Arthur Pendelton",
+        "fiscal_period": "Q4-2026",
+        "stage": "Business Approval",
+        "annual_acv": 600000.0
+      },
+      {
+        "opportunity_id": "006PF000001L004YAC",
+        "health_system": "Solstice Surgical Partners",
+        "product": "PulseOR",
+        "sales_rep": "Victor Vonnegut",
+        "fiscal_period": "Q4-2026",
+        "stage": "Technical Validation",
+        "annual_acv": 350000.0
+      },
+      {
+        "opportunity_id": "006PF000001L006YAC",
+        "health_system": "Verdant Valley Hospital",
+        "product": "BedFlow",
+        "sales_rep": "Clara Oswald",
+        "fiscal_period": "Q4-2026",
+        "stage": "Introduction",
+        "annual_acv": 400000.0
+      }
+    ],
+    "slipped_deals": [
+      {
+        "opportunity_id": "006PF000001X001YAC",
+        "health_system": "Fjordland Peninsula Health",
+        "product": "PulseOR",
+        "sales_rep": "Clara Oswald",
+        "prior_fiscal_period": "Q4-2026",
+        "current_fiscal_period": "Q1-2027",
+        "annual_acv": 600000.0
+      },
+      {
+        "opportunity_id": "006PF000001X003YAC",
+        "health_system": "Greystone Health Cooperative",
+        "product": "InfusionIQ",
+        "sales_rep": "Kira Nerys",
+        "prior_fiscal_period": "Q4-2026",
+        "current_fiscal_period": "Q1-2027",
+        "annual_acv": 250000.0
+      },
+      {
+        "opportunity_id": "006PF000001X002YAC",
+        "health_system": "Timberline Valley Medical",
+        "product": "BedFlow",
+        "sales_rep": "Victor Vonnegut",
+        "prior_fiscal_period": "Q4-2026",
+        "current_fiscal_period": "Q1-2027",
+        "annual_acv": 750000.0
+      }
+    ],
+    "closed_lost_deals": [
+      {
+        "opportunity_id": "006PF000001X005YAC",
+        "health_system": "Coral Reef Medical Group",
+        "product": "BedFlow",
+        "sales_rep": "Victor Vonnegut",
+        "prior_stage": "Technical Validation",
+        "current_stage": "Closed Lost",
+        "annual_acv": 650000.0
+      },
+      {
+        "opportunity_id": "006PF000001X004YAC",
+        "health_system": "Sycamore River Hospital",
+        "product": "PulseOR",
+        "sales_rep": "Julian Bashir",
+        "prior_stage": "Technical Validation",
+        "current_stage": "Closed Lost",
+        "annual_acv": 500000.0
+      }
+    ],
+    "stage_moves": [
+      {
+        "opportunity_id": "006PF000001L009YAC",
+        "health_system": "Alabaster Medical Center",
+        "product": "InfusionIQ",
+        "sales_rep": "Clara Oswald",
+        "prior_stage": "Technical Validation",
+        "current_stage": "Business Approval",
+        "direction": "advanced",
+        "prior_probability": 0.4,
+        "current_probability": 0.6,
+        "expected_value_change": 69999.99999999999
+      },
+      {
+        "opportunity_id": "006PF000001T006YAC",
+        "health_system": "Borealis Health Alliance - Main Campus",
+        "product": "PulseOR",
+        "sales_rep": "Clara Oswald",
+        "prior_stage": "Business Approval",
+        "current_stage": "Technical Validation",
+        "direction": "regressed",
+        "prior_probability": 0.6,
+        "current_probability": 0.4,
+        "expected_value_change": -319999.99999999994
+      },
+      {
+        "opportunity_id": "006PF000001L010YAC",
+        "health_system": "Mirage State Health System",
+        "product": "BedFlow",
+        "sales_rep": "Victor Vonnegut",
+        "prior_stage": "Business Approval",
+        "current_stage": "Technical Validation",
+        "direction": "regressed",
+        "prior_probability": 0.6,
+        "current_probability": 0.4,
+        "expected_value_change": -89999.99999999999
+      },
+      {
+        "opportunity_id": "006PF000001T002YAC",
+        "health_system": "Solaris Medical System (FKA Solaris Health Group)",
+        "product": "BedFlow",
+        "sales_rep": "Clara Oswald",
+        "prior_stage": "Business Approval",
+        "current_stage": "Contract Negotiations",
+        "direction": "advanced",
+        "prior_probability": 0.6,
+        "current_probability": 0.8,
+        "expected_value_change": 600000.0000000002
+      },
+      {
+        "opportunity_id": "006PF000001T004YAC",
+        "health_system": "Zephyr Valley System (AKA Zephyr Regional Medical Group)",
+        "product": "InfusionIQ",
+        "sales_rep": "Selene Novak",
+        "prior_stage": "Technical Validation",
+        "current_stage": "Business Approval",
+        "direction": "advanced",
+        "prior_probability": 0.4,
+        "current_probability": 0.6,
+        "expected_value_change": 299999.99999999994
+      }
+    ],
+    "acv_changes": [
+      {
+        "opportunity_id": "006PF000001L011YAC",
+        "health_system": "Polaris Community Hospitals",
+        "product": "PulseOR",
+        "sales_rep": "Julian Bashir",
+        "prior_annual_acv": 400000.0,
+        "current_annual_acv": 500000.0,
+        "change": 100000.0,
+        "direction": "increase"
+      },
+      {
+        "opportunity_id": "006PF000001T002YAC",
+        "health_system": "Solaris Medical System (FKA Solaris Health Group)",
+        "product": "BedFlow",
+        "sales_rep": "Clara Oswald",
+        "prior_annual_acv": 2600000.0,
+        "current_annual_acv": 3000000.0,
+        "change": 400000.0,
+        "direction": "increase"
+      },
+      {
+        "opportunity_id": "006PF000001L012YAC",
+        "health_system": "Windward Oncology Group",
+        "product": "InfusionIQ",
+        "sales_rep": "Selene Novak",
+        "prior_annual_acv": 300000.0,
+        "current_annual_acv": 200000.0,
+        "change": -100000.0,
+        "direction": "decrease"
+      }
+    ]
+  },
+  "audit_log": [
+    {
+      "audit_id": "audit-001",
+      "type": "conflicting_duplicate",
+      "status": "unresolved",
+      "source": "1_sfdc_pipeline_current.csv",
+      "source_rows": [
+        10,
+        11
+      ],
+      "record_id": "006PF000001L008YAC",
+      "original_value": {
+        "variants": [
+          {
+            "source_row": 10,
+            "stage": "Business Approval",
+            "stage_probability": 0.6,
+            "amount": 400000.0,
+            "annual_acv": 400000.0,
+            "expected_value": 240000.0
+          },
+          {
+            "source_row": 11,
+            "stage": "Contract Negotiations",
+            "stage_probability": 0.8,
+            "amount": 550000.0,
+            "annual_acv": 550000.0,
+            "expected_value": 440000.0
+          }
+        ]
+      },
+      "resulting_value": {
+        "baseline_source_row": 10,
+        "baseline_expected_value": 240000.0
+      },
+      "action": "Used the lowest expected-value source row as the conservative baseline and exposed every valid variant",
+      "resolution_source": "conservative_baseline_policy",
+      "forecast_impact": {
+        "baseline": 240000.0,
+        "maximum_alternative": 440000.0,
+        "difference": 200000.0
+      }
+    },
+    {
+      "audit_id": "audit-002",
+      "type": "exact_duplicate",
+      "status": "automatically_resolved",
+      "source": "1_sfdc_pipeline_current.csv",
+      "source_rows": [
+        17,
+        18
+      ],
+      "record_id": "006PF000001L014YAC",
+      "original_value": {
+        "duplicate_count": 2
+      },
+      "resulting_value": {
+        "calculation_record_count": 1,
+        "retained_source_row": 17
+      },
+      "action": "Removed 1 identical duplicate row(s)",
+      "resolution_source": "pipeline_rule",
+      "forecast_impact": 0
+    },
+    {
+      "audit_id": "audit-003",
+      "type": "exact_duplicate",
+      "status": "automatically_resolved",
+      "source": "4_carebridge_hubspot_export.csv",
+      "source_rows": [
+        3,
+        4
+      ],
+      "record_id": "HS-9002",
+      "original_value": {
+        "duplicate_count": 2
+      },
+      "resulting_value": {
+        "calculation_record_count": 1,
+        "retained_source_row": 3
+      },
+      "action": "Removed 1 identical duplicate row(s)",
+      "resolution_source": "pipeline_rule",
+      "forecast_impact": 0
+    },
+    {
+      "audit_id": "audit-004",
+      "type": "missing_scorecard_id",
+      "status": "human_resolved",
+      "source": "3_vp_deal_scorecard.xlsx",
+      "source_rows": [
+        9
+      ],
+      "record_id": "006PF000001T005YAC",
+      "original_value": {
+        "hospital": "Ironwood Clinical",
+        "opportunity_id": null
+      },
+      "resulting_value": {
+        "opportunity_id": "006PF000001T005YAC"
+      },
+      "action": "Applied and validated the confirmed Salesforce mapping: Confirmed against the current Salesforce pipeline",
+      "resolution_source": "config/resolutions.json",
+      "forecast_impact": null
+    },
+    {
+      "audit_id": "audit-005",
+      "type": "scorecard_probability_mismatch",
+      "status": "automatically_resolved",
+      "source": "3_vp_deal_scorecard.xlsx",
+      "source_rows": [
+        9
+      ],
+      "record_id": "006PF000001T005YAC",
+      "original_value": {
+        "workbook_probability": 0.75,
+        "composite_gpa": 2.4
+      },
+      "resulting_value": {
+        "rule_probability": 0.5
+      },
+      "action": "Used the probability required by the written GPA rule",
+      "resolution_source": "challenge_rule_2",
+      "forecast_impact": -550000.0
+    },
+    {
+      "audit_id": "audit-006",
+      "type": "missing_scorecard_id",
+      "status": "human_resolved",
+      "source": "3_vp_deal_scorecard.xlsx",
+      "source_rows": [
+        10
+      ],
+      "record_id": "006PF000001T006YAC",
+      "original_value": {
+        "hospital": "Borealis Health",
+        "opportunity_id": null
+      },
+      "resulting_value": {
+        "opportunity_id": "006PF000001T006YAC"
+      },
+      "action": "Applied and validated the confirmed Salesforce mapping: Confirmed against the current Salesforce pipeline",
+      "resolution_source": "config/resolutions.json",
+      "forecast_impact": null
+    },
+    {
+      "audit_id": "audit-007",
+      "type": "missing_scorecard_id",
+      "status": "human_resolved",
+      "source": "3_vp_deal_scorecard.xlsx",
+      "source_rows": [
+        11
+      ],
+      "record_id": "006PF000001T007YAC",
+      "original_value": {
+        "hospital": "Starlight Oncology",
+        "opportunity_id": null
+      },
+      "resulting_value": {
+        "opportunity_id": "006PF000001T007YAC"
+      },
+      "action": "Applied and validated the confirmed Salesforce mapping: Confirmed against the current Salesforce pipeline",
+      "resolution_source": "config/resolutions.json",
+      "forecast_impact": null
+    },
+    {
+      "audit_id": "audit-008",
+      "type": "missing_scorecard_id",
+      "status": "human_resolved",
+      "source": "3_vp_deal_scorecard.xlsx",
+      "source_rows": [
+        12
+      ],
+      "record_id": "006PF000001T008YAC",
+      "original_value": {
+        "hospital": "Halcyon Medical",
+        "opportunity_id": null
+      },
+      "resulting_value": {
+        "opportunity_id": "006PF000001T008YAC"
+      },
+      "action": "Applied and validated the confirmed Salesforce mapping: Confirmed against the current Salesforce pipeline",
+      "resolution_source": "config/resolutions.json",
+      "forecast_impact": null
+    },
+    {
+      "audit_id": "audit-009",
+      "type": "monthly_to_annual_conversion",
+      "status": "automatically_resolved",
+      "source": "4_carebridge_hubspot_export.csv",
+      "source_rows": [
+        2
+      ],
+      "record_id": "HS-9001",
+      "original_value": {
+        "amount": 15000.0,
+        "billing_frequency": "Monthly"
+      },
+      "resulting_value": {
+        "annual_acv": 180000.0
+      },
+      "action": "Multiplied the monthly amount by 12",
+      "resolution_source": "challenge_rule_1",
+      "forecast_impact": 132000.0
+    },
+    {
+      "audit_id": "audit-010",
+      "type": "monthly_to_annual_conversion",
+      "status": "automatically_resolved",
+      "source": "4_carebridge_hubspot_export.csv",
+      "source_rows": [
+        3
+      ],
+      "record_id": "HS-9002",
+      "original_value": {
+        "amount": 20000.0,
+        "billing_frequency": "Monthly"
+      },
+      "resulting_value": {
+        "annual_acv": 240000.0
+      },
+      "action": "Multiplied the monthly amount by 12",
+      "resolution_source": "challenge_rule_1",
+      "forecast_impact": 176000.0
+    },
+    {
+      "audit_id": "audit-011",
+      "type": "monthly_to_annual_conversion",
+      "status": "automatically_resolved",
+      "source": "4_carebridge_hubspot_export.csv",
+      "source_rows": [
+        5
+      ],
+      "record_id": "HS-9003",
+      "original_value": {
+        "amount": 12500.0,
+        "billing_frequency": "Monthly"
+      },
+      "resulting_value": {
+        "annual_acv": 150000.0
+      },
+      "action": "Multiplied the monthly amount by 12",
+      "resolution_source": "challenge_rule_1",
+      "forecast_impact": 82500.0
+    },
+    {
+      "audit_id": "audit-012",
+      "type": "monthly_to_annual_conversion",
+      "status": "automatically_resolved",
+      "source": "4_carebridge_hubspot_export.csv",
+      "source_rows": [
+        6
+      ],
+      "record_id": "HS-9004",
+      "original_value": {
+        "amount": 10000.0,
+        "billing_frequency": "Monthly"
+      },
+      "resulting_value": {
+        "annual_acv": 120000.0
+      },
+      "action": "Multiplied the monthly amount by 12",
+      "resolution_source": "challenge_rule_1",
+      "forecast_impact": 66000.0
+    },
+    {
+      "audit_id": "audit-013",
+      "type": "monthly_to_annual_conversion",
+      "status": "automatically_resolved",
+      "source": "4_carebridge_hubspot_export.csv",
+      "source_rows": [
+        7
+      ],
+      "record_id": "HS-9005",
+      "original_value": {
+        "amount": 8000.0,
+        "billing_frequency": "Monthly"
+      },
+      "resulting_value": {
+        "annual_acv": 96000.0
+      },
+      "action": "Multiplied the monthly amount by 12",
+      "resolution_source": "challenge_rule_1",
+      "forecast_impact": 35200.0
+    },
+    {
+      "audit_id": "audit-014",
+      "type": "monthly_to_annual_conversion",
+      "status": "automatically_resolved",
+      "source": "4_carebridge_hubspot_export.csv",
+      "source_rows": [
+        13
+      ],
+      "record_id": "HS-9011",
+      "original_value": {
+        "amount": 15000.0,
+        "billing_frequency": "Monthly"
+      },
+      "resulting_value": {
+        "annual_acv": 180000.0
+      },
+      "action": "Multiplied the monthly amount by 12",
+      "resolution_source": "challenge_rule_1",
+      "forecast_impact": 0
+    },
+    {
+      "audit_id": "audit-015",
+      "type": "monthly_to_annual_conversion",
+      "status": "automatically_resolved",
+      "source": "4_carebridge_hubspot_export.csv",
+      "source_rows": [
+        15
+      ],
+      "record_id": "HS-9013",
+      "original_value": {
+        "amount": 12000.0,
+        "billing_frequency": "Monthly"
+      },
+      "resulting_value": {
+        "annual_acv": 144000.0
+      },
+      "action": "Multiplied the monthly amount by 12",
+      "resolution_source": "challenge_rule_1",
+      "forecast_impact": 0
+    },
+    {
+      "audit_id": "audit-016",
+      "type": "cross_source_duplicate",
+      "status": "automatically_resolved",
+      "source": "1_sfdc_pipeline_current.csv + 4_carebridge_hubspot_export.csv",
+      "source_rows": [
+        32,
+        2
+      ],
+      "record_id": "006PF000001M001YAC",
+      "original_value": {
+        "salesforce_id": "006PF000001M001YAC",
+        "hubspot_id": "HS-9001",
+        "annual_acv": 180000.0
+      },
+      "resulting_value": {
+        "retained_source": "salesforce",
+        "calculation_record_count": 1
+      },
+      "action": "Counted the equivalent cross-system deal once using the Salesforce record",
+      "resolution_source": "pipeline_identity_rule",
+      "forecast_impact": -144000.0
+    },
+    {
+      "audit_id": "audit-017",
+      "type": "stale_close_date",
+      "status": "warning",
+      "source": "1_sfdc_pipeline_current.csv",
+      "source_rows": [
+        3
+      ],
+      "record_id": "006PF000001L001YAC",
+      "original_value": {
+        "close_date": "2026-10-05",
+        "reporting_date": "2026-10-15"
+      },
+      "resulting_value": {
+        "deal_retained": true
+      },
+      "action": "Kept the deal because fiscal period and stage determine eligibility",
+      "resolution_source": "eligibility_rule",
+      "forecast_impact": 0
+    },
+    {
+      "audit_id": "audit-018",
+      "type": "stale_close_date",
+      "status": "warning",
+      "source": "1_sfdc_pipeline_current.csv",
+      "source_rows": [
+        4
+      ],
+      "record_id": "006PF000001L002YAC",
+      "original_value": {
+        "close_date": "2026-10-10",
+        "reporting_date": "2026-10-15"
+      },
+      "resulting_value": {
+        "deal_retained": true
+      },
+      "action": "Kept the deal because fiscal period and stage determine eligibility",
+      "resolution_source": "eligibility_rule",
+      "forecast_impact": 0
+    },
+    {
+      "audit_id": "audit-019",
+      "type": "stale_close_date",
+      "status": "warning",
+      "source": "1_sfdc_pipeline_current.csv",
+      "source_rows": [
+        5
+      ],
+      "record_id": "006PF000001L003YAC",
+      "original_value": {
+        "close_date": "2026-10-12",
+        "reporting_date": "2026-10-15"
+      },
+      "resulting_value": {
+        "deal_retained": true
+      },
+      "action": "Kept the deal because fiscal period and stage determine eligibility",
+      "resolution_source": "eligibility_rule",
+      "forecast_impact": 0
+    },
+    {
+      "audit_id": "audit-020",
+      "type": "stale_close_date",
+      "status": "warning",
+      "source": "4_carebridge_hubspot_export.csv",
+      "source_rows": [
+        6
+      ],
+      "record_id": "HS-9004",
+      "original_value": {
+        "close_date": "2026-10-08",
+        "reporting_date": "2026-10-15"
+      },
+      "resulting_value": {
+        "deal_retained": true
+      },
+      "action": "Kept the deal because fiscal period and stage determine eligibility",
+      "resolution_source": "eligibility_rule",
+      "forecast_impact": 0
+    }
+  ]
+}
