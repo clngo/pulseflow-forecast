@@ -1,33 +1,5 @@
 {
-  "scorecard_mappings": [
-    {
-      "source_row": 9,
-      "opportunity_id": "006PF000001T005YAC",
-      "reason": "Same name, product, and sales rep"
-    },
-    {
-      "source_row": 10,
-      "opportunity_id": "006PF000001T006YAC",
-      "reason": "Same name, product, and sales rep"
-    },
-    {
-      "source_row": 11,
-      "opportunity_id": "006PF000001T007YAC",
-      "reason": "Same name, product, and sales rep"
-    },
-    {
-      "source_row": 12,
-      "opportunity_id": "006PF000001T008YAC",
-      "reason": "Same name, product, and sales rep"
-    }
-  ],
-  "duplicate_selections": [
-    {
-      "source": "1_sfdc_pipeline_current.csv",
-      "opportunity_id": "006PF000001L008YAC",
-      "selected_source_row": 10,
-      "reason": "Checked prior for same stage"
-    }
-  ],
+  "scorecard_mappings": [],
+  "duplicate_selections": [],
   "record_overrides": []
 }
