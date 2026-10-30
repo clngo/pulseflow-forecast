@@ -220,5 +220,12 @@
     "operations": [
       {"action": "set", "dataset": "scorecard", "match": {"Opportunity_ID_15": "006TEST00000001"}, "values": {"Leadership_Score": 5}}
     ]
+  },
+  "mixed_length_salesforce_ids": {
+    "expected_outcome": "correct",
+    "description": "The prior export uses a 15-character Salesforce ID while the current export uses its 18-character form.",
+    "operations": [
+      {"action": "set", "dataset": "prior", "match": {"Opportunity_ID": "006TEST00000002AAA"}, "values": {"Opportunity_ID": "006TEST00000002", "Stage": "Introduction", "Stage_Probability": "0.20", "Amount": "90000"}}
+    ]
   }
 }

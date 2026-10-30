@@ -109,7 +109,7 @@ The official reporting date is fixed at October 15, 2026 for this exercise. Fisc
 
 ## 6. Identifier and name matching
 
-Salesforce supplies both 15-character and 18-character IDs. The pipeline preserves the original ID and uses the first 15 characters as the exact, case-sensitive matching key. This allows the prior-week file and scorecard to join to the current export without fuzzy ID matching.
+Salesforce supplies both 15-character and 18-character IDs. The pipeline accepts either form, preserves the original value without editing it, and uses the first 15 characters as the exact, case-sensitive matching key everywhere. The final three characters of an 18-character value are ignored for matching and are not separately validated. This allows the prior-week file and scorecard to join to the current export without fuzzy ID matching.
 
 Names are normalized for capitalization, punctuation, and repeated spaces. A missing scorecard ID is filled automatically only when exactly one current Salesforce record matches the normalized hospital, product, and sales representative.
 
@@ -143,7 +143,7 @@ Duplicates are evaluated after standardization so monthly and annual representat
 - **Equivalent Salesforce and CareBridge deal:** count once and retain Salesforce as the calculation record.
 - **Strong cross-source match with material value conflict:** block and show both records.
 
-A duplicate selection identifies the source filename, opportunity ID, selected source row, and reason. This allows current- and prior-week conflicts to be resolved independently. Once selected, the same record is used for the forecast, week-over-week comparison, and Deal Room; unresolved variants are never published.
+A duplicate selection identifies the source filename, canonical 15-character opportunity ID, selected source row, and reason. This allows current- and prior-week conflicts to be resolved independently. Once selected, the same record is used for the forecast, week-over-week comparison, and Deal Room; unresolved variants are never published.
 
 ## 8. Human resolutions
 
@@ -200,7 +200,7 @@ The tests use a small committed baseline containing all four real file formats. 
 
 The suite checks the important business outcomes rather than attempting every mathematical combination. Its main question is whether each representative condition is accepted, audited, or blocked exactly as specified.
 
-At finalization, all 50 tests covering scenarios T01 through T38 pass. A new rule should receive a new scenario ID and a corresponding automated test.
+At finalization, all 57 tests covering scenarios T01 through T41 pass. A new rule should receive a new scenario ID and a corresponding automated test.
 
 ## 12. Recorded UI incident
 
@@ -257,7 +257,7 @@ A checksum is a short fingerprint calculated from file contents. Identical files
 
 In production, each ingestion should record the filename, SHA-256 checksum, reporting date, row count, source system, ingestion time, and pipeline version. This would detect accidental reprocessing, prove which exact export created a forecast, and support historical reproduction.
 
-The final three characters of an 18-character Salesforce ID are also commonly called a checksum suffix. They make the 15-character ID safe for case-insensitive environments. The current pipeline joins on the original case-sensitive 15-character portion because some supplied sources do not have the suffix. A production validator could verify the full 18-character form when it is available.
+The final three characters of an 18-character Salesforce ID make the 15-character ID safe for case-insensitive environments. This pipeline intentionally does not interpret or validate that suffix: it preserves the supplied ID and uses the exact, case-sensitive first 15 characters for matching.
 
 ### Upserts
 
@@ -293,7 +293,6 @@ Useful extensions include:
 - separating canonical hospital names from AKA/FKA aliases;
 - parameterizing the reporting date and board target;
 - recording source snapshot dates;
-- validating Salesforce 18-character checksum suffixes;
 - monitoring stale resolutions across weekly snapshots; and
 - alerting when a scheduled run is blocked or a forecast becomes stale.
 

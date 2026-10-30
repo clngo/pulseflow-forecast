@@ -1,5 +1,7 @@
 # PulseFlow Health — Associate GTM Engineer Technical Exercise
 
+> This file preserves the original exercise requirements. For the implemented workflow, use the root [`README.md`](../README.md); for final behavior and decisions, use [`DOCUMENTATION.md`](DOCUMENTATION.md) and [`TESTS.md`](TESTS.md).
+
 **Role:** Associate GTM Engineer (L3)  
 **Time Budget:** ~3–4 hours (AI coding tools such as Claude Code, OpenCode, Cursor, Copilot, or Antigravity are **strongly encouraged**)  
 **As-Of Reference Date:** Use **`2026-10-15`** as "today's date" for all date comparisons.  

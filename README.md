@@ -2,7 +2,7 @@
 
 This project turns four sales exports into a checked, repeatable Q4 forecast and an interactive dashboard. It is designed so a business user can understand what was counted, what was corrected automatically, and what still needs a human decision.
 
-The included data currently produces a **$12,982,400 expected Q4 forecast**, which is **$982,400 above** the $12 million board target.
+The displayed totals come from the last successful pipeline run. Always check `data/output/review.json` before assuming a newly selected input file has been published.
 
 ## What the project does
 
@@ -132,7 +132,7 @@ When rows in one source file share an ID but contain different meaningful values
   "duplicate_selections": [
     {
       "source": "1_sfdc_pipeline_current.csv",
-      "opportunity_id": "006PF000001L008YAC",
+      "opportunity_id": "006PF000001L008",
       "selected_source_row": 11,
       "reason": "Confirmed against the Salesforce opportunity history"
     }
@@ -141,7 +141,9 @@ When rows in one source file share an ID but contain different meaningful values
 }
 ```
 
-The source filename and selected row must exactly match the conflict reported by the pipeline, and a reason is required. Current- and prior-week conflicts are resolved separately because each file can require a different authoritative row. The selected record is then used consistently by the forecast, week-over-week comparison, and Deal Room.
+Use the canonical first 15 characters of the Salesforce ID. The source filename and selected row must exactly match the conflict reported by the pipeline, and a reason is required. Current- and prior-week conflicts are resolved separately because each file can require a different authoritative row. The selected record is then used consistently by the forecast, week-over-week comparison, and Deal Room.
+
+Salesforce exports may contain either 15- or 18-character IDs. The pipeline preserves the supplied value for display but compares records using the exact, case-sensitive first 15 characters. Therefore, a prior ID such as `006PF000001L008` and a current ID such as `006PF000001L008YAC` are the same deal, not a new deal.
 
 ### 3. Correct a known source value
 
@@ -199,6 +201,8 @@ tests/                      Reproducible automated tests and fixtures
 app/                        Interactive dashboard
 docs/DOCUMENTATION.md       Detailed system explanation and decisions
 docs/TESTS.md               Numbered behavioral test contract
+docs/PLAN.md                Final implemented plan and acceptance status
+docs/README_CHALLENGE.md    Original exercise requirements
 ```
 
 This repository is intentionally file-based. It does not require a database, API, authentication system, or source-system writeback to demonstrate a trustworthy and reproducible forecast workflow.

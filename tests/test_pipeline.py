@@ -111,6 +111,42 @@ def test_t32_active_q4_acv_change_reports_amount_and_direction() -> None:
     assert change["direction"] == "increase"
 
 
+def test_t41_prior_15_character_id_matches_current_18_character_id(tmp_path) -> None:
+    root = make_scenario_dataset(
+        tmp_path / "mixed-length-salesforce-ids",
+        "mixed_length_salesforce_ids",
+    )
+
+    review, forecast = build_outputs(root)
+
+    assert review["status"] == "clear"
+    assert forecast is not None
+    movement = forecast["week_over_week"]
+    assert "006TEST00000002AAA" not in {
+        deal["opportunity_id"] for deal in movement["new_deals"]
+    }
+    stage_move = next(
+        deal
+        for deal in movement["stage_moves"]
+        if deal["opportunity_id"] == "006TEST00000002AAA"
+    )
+    assert stage_move["prior_stage"] == "Introduction"
+    assert stage_move["current_stage"] == "Business Approval"
+    assert stage_move["direction"] == "advanced"
+    acv_change = next(
+        deal
+        for deal in movement["acv_changes"]
+        if deal["opportunity_id"] == "006TEST00000002AAA"
+    )
+    assert acv_change["prior_annual_acv"] == 90_000
+    assert acv_change["current_annual_acv"] == 100_000
+    assert acv_change["change"] == 10_000
+    assert any(
+        deal["opportunity_id"] == "006TEST00000002AAA"
+        for deal in forecast["deals"]
+    )
+
+
 def test_t33_confirmed_scorecard_mappings_are_applied_and_audited(tmp_path) -> None:
     root = make_scenario_dataset(
         tmp_path / "confirmed-scorecard-mapping",

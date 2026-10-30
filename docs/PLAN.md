@@ -1,293 +1,158 @@
-# PulseFlow Health Forecast — Implementation Plan
+# PulseFlow Health Forecast — Final Implementation Plan
 
-> **Historical planning artifact:** this file records the implementation plan before finalization. The authoritative description of the completed system is [`docs/DOCUMENTATION.md`](docs/DOCUMENTATION.md), and the behavioral contract is [`docs/TESTS.md`](docs/TESTS.md).
+This plan describes the implemented system. [`DOCUMENTATION.md`](DOCUMENTATION.md) explains the decisions in depth, while [`TESTS.md`](TESTS.md) is the exact behavioral contract.
 
 ## 1. Goal
 
-Build a repeatable pipeline and dashboard that answer:
+Turn four selected sales exports into a reproducible Q4 forecast, week-over-week comparison, and audit trail without modifying the source files.
 
-> How much new annual software sales are expected to close in Q4 2026, and how does that compare with the $12 million board target?
+The system publishes only when every blocking issue has either been corrected in the source or resolved by a supported human decision.
 
-The project must:
-
-- Read the four supplied CSV/XLSX exports without modifying them.
-- Standardize and validate records before calculating the forecast.
-- Calculate Top 8 and longtail expected sales.
-- Compare the current Salesforce export with the prior week.
-- Detect duplicates, conflicts, and invalid source data.
-- Generate clear review and audit evidence.
-- Accept durable human corrections through one configuration file.
-- Support temporary dashboard what-if scenarios without changing the pipeline result.
-
-This is a take-home application. It does not require a database, API, authentication, or source-system writeback.
-
-## 2. Project Structure
+## 2. Files and responsibilities
 
 ```text
-candidate_packet/
-├── data/
-│   ├── input/
-│   │   ├── 1_sfdc_pipeline_current.csv
-│   │   ├── 2_sfdc_pipeline_prior_week.csv
-│   │   ├── 3_vp_deal_scorecard.xlsx
-│   │   └── 4_carebridge_hubspot_export.csv
-│   └── output/
-│       ├── review.json
-│       └── forecast.json
-├── config/
-│   └── resolutions.json
-├── pipeline/
-│   └── process_data.py
-├── tests/
-│   ├── fixtures/
-│   │   ├── baseline/
-│   │   │   ├── data/input/       # Four small, valid synthetic source files
-│   │   │   └── config/resolutions.json
-│   │   └── scenarios.json        # Committed test mutations and expected outcomes
-│   ├── fixture_factory.py
-│   ├── test_correct_inputs.py
-│   ├── test_human_review_flags.py
-│   ├── test_invalid_data_errors.py
-│   └── test_pipeline.py
-├── app/
-│   ├── src/
-│   └── vite.config.ts
-├── README_CHALLENGE.md
-├── README.md
-├── PLAN.md
-└── requirements.txt
+data/input/                 CSV and XLSX source exports
+config/input_files.json     Assigns one input filename to each of the four roles
+config/resolutions.json     Confirmed human decisions
+pipeline/process_data.py    Validation, reconciliation, calculations, and outputs
+data/output/review.json     Latest clear or blocked review result
+data/output/forecast.json   Last successfully published forecast
+app/                        Dashboard and blocker-resolution interface
+tests/                      Reproducible pytest fixtures and scenarios
+docs/TESTS.md               Numbered behavioral contract
+docs/DOCUMENTATION.md       Detailed explanation and design decisions
 ```
 
-### File responsibilities
+The four roles in `config/input_files.json` are:
 
-- `data/input/` contains the immutable business source files.
-- `data/output/review.json` contains the latest validation and human-review result.
-- `data/output/forecast.json` contains the last successfully published forecast, deal details, week-over-week analysis, and audit log.
-- `config/resolutions.json` contains confirmed human corrections.
-- `pipeline/process_data.py` owns validation, standardization, reconciliation, calculations, and output generation.
-- `tests/fixtures/baseline/` contains a committed, inspectable synthetic dataset.
-- `tests/fixtures/scenarios.json` defines each deliberate test mutation and its expected outcome.
-- `tests/fixture_factory.py` copies the committed baseline into an isolated pytest working directory and applies the selected committed scenario. Temporary copies are never authoritative data.
-- The React application reads the canonical `data/output/forecast.json` through Vite's public-directory configuration.
+- `salesforce_current`
+- `salesforce_prior`
+- `vp_scorecard`
+- `carebridge_current`
 
-## 3. Pipeline Flow
+All selected files must be inside `data/input/`. A new weekly export requires changing only these filename assignments; pipeline behavior remains unchanged.
+
+## 3. Pipeline flow
 
 ```text
-data/input/* + config/resolutions.json
-                    ↓
-              process_data.py
-                    ↓
-       validate → standardize → reconcile
-                    ↓
-          calculate → audit → publish
-             /                    \
-       blocked run            successful run
-            ↓                       ↓
- replace review.json       replace review.json
- preserve forecast.json    replace forecast.json
+selected inputs + resolutions
+              |
+              v
+validate -> standardize -> deduplicate -> reconcile
+              |
+              v
+calculate -> compare weeks -> audit
+        /                       \
+   blocked                      clear
+      |                           |
+update review             update review and forecast
+preserve old forecast
 ```
 
-Every run starts from the four source files and the complete resolutions file. Outputs are rebuilt rather than patched incrementally.
+Every run rebuilds the result from the selected inputs and the complete resolution file. Generated JSON is never edited manually.
 
-Run from the project root:
+## 4. Publication rules
 
-```bash
-.venv/bin/python pipeline/process_data.py
-```
+The pipeline has three outcomes:
 
-## 4. The Three Processing Outcomes
+- **Accepted:** valid source data is used directly or transformed by an unambiguous rule.
+- **Audited:** publication continues, but a transformation, warning, or confirmed human decision is recorded.
+- **Blocked:** no safe answer exists; `review.json` provides the source, row, evidence, and required action, and no new forecast is published.
 
-Every record or conflict must end in one of three understandable outcomes.
+Examples of deterministic behavior include annualizing monthly CareBridge amounts, normalizing known capitalization, recalculating Top 8 probability, and collapsing exact duplicates.
 
-### Correct
+Examples of blockers include malformed records, missing required inputs, conflicting duplicates, materially conflicting cross-source copies, and ambiguous scorecard mappings.
 
-The record is valid as supplied, or a deterministic written rule produces one safe result.
-
-Examples:
-
-- Monthly CareBridge amount is converted to annual ACV.
-- An exact duplicate is collapsed.
-- A Top 8 probability is recalculated from the written GPA rule.
-- A Closed Lost record is assigned 0% probability and excluded from forecast value.
-
-The pipeline may publish the forecast. Any automatic correction must appear in the audit log.
-
-### Human review
-
-The data is valid enough to understand, but no written rule can safely choose the correct business answer.
-
-Examples:
-
-- Duplicate rows disagree on customer identity.
-- Likely Salesforce and CareBridge copies disagree materially.
-- A required scorecard opportunity ID is missing and has no unique exact hospital, product, and sales rep match.
-- An active Salesforce stage and probability disagree.
-
-The pipeline must block publication, explain the evidence in `review.json`, and request a specific human action.
-
-One exception is an identity-consistent duplicate with multiple financially valid variants. The pipeline publishes the conservative variant as the baseline, preserves each distinct variant for dashboard analysis, and records the unresolved conflict in the audit log. Exact copies do not create additional variants.
-
-### Invalid data
-
-The source contains a value that violates the input contract or cannot represent a valid record.
-
-Examples:
-
-- Negative amount.
-- Probability outside 0–1.
-- Unsupported billing frequency.
-- Malformed Salesforce ID.
-- Impossible stage or active close date.
-- Missing required column.
-- Top 8 score outside 1–4.
-
-The pipeline must block publication and classify the issue as `invalid_data` in `review.json`.
-
-## 5. Forecast Rules
+## 5. Forecast rules
 
 ### Annual ACV
 
-- Salesforce amounts are already annual ACV.
-- CareBridge `Monthly` amounts are multiplied by 12.
-- CareBridge `Annual` amounts are used as supplied.
-- Unsupported billing frequencies are invalid data.
+- Salesforce amounts are already annual.
+- Monthly CareBridge amounts are multiplied by 12.
+- Annual CareBridge amounts are used as supplied.
 
 ### Top 8
 
 ```text
-GPA = round(20% × Leadership + 20% × Commercial + 60% × Contractual, 2)
+GPA = round(20% Leadership + 20% Commercial + 60% Contractual, 2)
 
-GPA >= 3.20             → 75%
-GPA >= 2.40 and < 3.20  → 50%
-GPA >= 1.60 and < 2.40  → 30%
-GPA < 1.60              → 10%
-
-Expected value = annual ACV × GPA probability
+GPA >= 3.20  -> 75%
+GPA >= 2.40  -> 50%
+GPA >= 1.60  -> 30%
+otherwise    -> 10%
 ```
 
-The calculated GPA probability controls. A different workbook probability is not accepted as an override; it is corrected and audited.
+The calculated probability controls and any workbook disagreement is audited.
 
 ### Longtail
 
-Longtail consists of active Q4-2026 deals across Salesforce and CareBridge that are not in the Top 8.
+Active Q4 deals outside the Top 8 use the valid probability supplied by their source. The pipeline accepts values from 0 through 1 and does not force stage/probability pairs.
 
 ```text
-Expected value = annual ACV × validated source-stage probability
+Expected value = annual ACV x probability
+Total forecast = Top 8 + Salesforce longtail + CareBridge longtail
+Variance = total forecast - $12,000,000
 ```
 
-Closed Lost always has 0% probability, contributes $0, and cannot affect deal scoring.
+Closed Lost records are excluded from the active forecast without inspecting or rewriting their supplied probability.
 
-### Total
+## 6. Identifier and duplicate rules
 
-```text
-Total expected sales = Top 8 + Salesforce longtail + CareBridge longtail
-Variance to target = Total expected sales − $12,000,000
-```
+- Accept 15- or 18-character Salesforce IDs.
+- Preserve the original ID for display and auditing.
+- Use the exact, case-sensitive first 15 characters for duplicate detection, scorecard matching, resolutions, and current-versus-prior comparison.
+- Ignore the final three characters for matching; do not edit the source ID.
+- Collapse exact same-source copies and audit the action.
+- Block every meaningful same-source conflict until one authoritative source row is selected.
+- Resolve current and prior conflicts independently because they are different snapshots.
+- Count a strong equivalent Salesforce/CareBridge match once; block when a strong match contains a material conflict.
 
-## 6. Duplicate Handling
+No unresolved duplicate variant is published to the forecast or Deal Room.
 
-Process duplicates only after values and identifiers are standardized.
+## 7. Human resolutions
 
-- Exact copies are counted once and audited.
-- Same-source duplicates with the same business identity but different valid financial states become distinct forecast variants.
-- The conservative variant is the pipeline baseline until a human confirms one.
-- Identity disagreements block for human review.
-- Equivalent Salesforce/CareBridge copies are counted once, retaining Salesforce as the calculation record.
-- Likely cross-source copies with conflicting material values block for human review.
+One cumulative `config/resolutions.json` supports:
 
-## 7. Human Corrections
+- `scorecard_mappings`: map a scorecard source row to a confirmed Salesforce opportunity.
+- `duplicate_selections`: choose one row using source filename, canonical 15-character ID, selected source row, and reason.
+- `record_overrides`: correct one allowed source field with an explicit reason.
 
-Humans do not edit raw exports or generated JSON files. Confirmed decisions go in:
+The independent Pipeline Review page reads blockers from `review.json` and can download a complete `resolutions.json`. The operator replaces the existing config file, reruns the pipeline, and confirms the resulting audit entry. Missing files, missing columns, and unsupported structural problems remain source-file fixes.
 
-```text
-config/resolutions.json
-```
+## 8. Week-over-week rules
 
-It supports:
+Current and prior Salesforce snapshots are standardized and deduplicated before comparison. Equivalent 15- and 18-character representations match as the same opportunity.
 
-- `scorecard_mappings`: confirm the Salesforce ID for a scorecard row.
-- `duplicate_selections`: confirm the authoritative row for a known duplicate conflict.
-- `record_overrides`: correct a specific source field with a reason.
+The output reports:
 
-For a blank scorecard ID, the pipeline automatically maps exactly one normalized hospital, product, and sales rep match and audits the decision. Otherwise, it generates ranked suggestions in `review.json`; fuzzy similarity never selects a mapping automatically.
+- new records;
+- Q4 deals slipped to Q1;
+- newly Closed Lost deals;
+- ordered stage advances or regressions; and
+- annual ACV increases or decreases.
 
-Correction workflow:
+A deal is new only when its canonical 15-character ID is absent from the prior file. Stage and fiscal period do not change that definition.
 
-1. Run the pipeline.
-2. Read `data/output/review.json`.
-3. Confirm the business answer.
-4. Add or update the decision in `config/resolutions.json`.
-5. Rerun the complete pipeline.
-6. Verify the result and audit entry in `data/output/forecast.json` and the dashboard.
+## 9. Dashboard behavior
 
-`resolutions.json` is cumulative. A rerun rebuilds both outputs from the raw files plus all active resolutions. A blocked rerun replaces `review.json` but preserves the last valid `forecast.json`.
+- **Overview:** published totals, target variance, and forecast composition.
+- **Deal Room:** browser-only score and probability-model what-if analysis.
+- **Week over week:** the five movement categories.
+- **Data hygiene:** automatic changes, warnings, and human-confirmed resolutions.
+- **Pipeline Review:** a separate blocker interface shown instead of the dashboard when the latest run is blocked.
 
-## 8. Week-over-Week Rules
+Browser what-if changes never modify inputs, resolutions, generated JSON, or the audit log. Refreshing or resetting restores the published baseline.
 
-Compare standardized Salesforce current and prior-week records by canonical opportunity ID.
+## 10. Verification and completion
 
-Report:
+The committed fixtures cover valid calculations, automatic audits, blockers, resolutions, duplicate selection in both weekly files, and mixed 15-/18-character Salesforce IDs.
 
-- New deals: present now and absent from the prior file, regardless of fiscal period or stage.
-- Slipped deals.
-- Newly Closed Lost deals.
-- Stage changes.
-- Annual ACV changes.
-
-Standardization and duplicate handling occur before the weekly comparison.
-
-## 9. Audit and Review Outputs
-
-`review.json` is operational input for the human-review workflow. It contains blocking issues, invalid records, evidence, suggestions, and required actions.
-
-`forecast.json` is the published dashboard artifact. Its `audit_log` contains automatic corrections, confirmed resolutions, warnings, duplicate treatment, unresolved forecast variants, original values, resulting values, and financial impact where applicable.
-
-The dashboard's Data Hygiene view reads the audit log from `forecast.json`.
-
-## 10. Dashboard Behavior
-
-- **Overview:** published forecast, target variance, bucket totals, and confidence status.
-- **Deal Room:** session-only score and source-variant what-if analysis.
-- **Week over week:** new, slipped, Closed Lost, stage, and ACV changes.
-- **Data hygiene:** automatic changes, human confirmations, warnings, and unresolved conflicts.
-
-Deal Room controls never modify input files, `resolutions.json`, `review.json`, `forecast.json`, or the audit log. Reset or refresh restores the pipeline baseline.
-
-## 11. Test Strategy
-
-`docs/TESTS.md` is the source of truth for scenario definitions and expected behavior. This section only summarizes the test structure.
-
-The committed test system has two parts:
-
-1. `tests/fixtures/baseline/` provides real CSV/XLSX files that can be inspected in Git.
-2. `tests/fixtures/scenarios.json` defines reproducible mutations and the expected outcome for every covered case.
-
-During a test, `fixture_factory.py` copies the baseline to pytest's isolated directory and applies one scenario. This prevents a test from changing committed fixtures while keeping all authoritative inputs and mutations in the repository.
-
-Test groups:
-
-- `test_correct_inputs.py`: valid calculations and deterministic automatic corrections.
-- `test_human_review_flags.py`: ambiguous conditions that must be surfaced or blocked.
-- `test_invalid_data_errors.py`: impossible data and broken input contracts.
-- `test_pipeline.py`: supplied-data integration and core business-rule boundaries.
-
-Run:
+Run the final checks from the repository root:
 
 ```bash
 .venv/bin/python -m pytest -q
+cd app
+npm run build
 ```
 
-Every contract scenario is identified by its stable `Txx` ID in both `docs/TESTS.md` and the pytest function name. The finalized suite passes all 50 test cases covering `T01` through `T38`.
-
-## 12. Current Implementation Status
-
-The pipeline currently satisfies the complete test contract:
-
-- Closed Lost deals are excluded without inspecting or rewriting their probability.
-- Blank scorecard IDs are mapped automatically only for one exact normalized hospital, product, and sales rep match; all other cases block with ranked suggestions.
-- Missing source files and required columns return structured blocking review results.
-- Strong cross-source identity matches with conflicting financial values block publication.
-- Valid longtail probabilities from 0 through 1 are used as supplied.
-- Invalid and stale close dates remain nonblocking audit warnings because Fiscal Period and Stage control eligibility.
-
-The production data run generates a $12,982,400 forecast with 38 active deals and 20 audit entries. The dashboard reads the regenerated canonical forecast from `data/output/forecast.json`.
+Implementation is complete when all scenarios in `TESTS.md` pass, the frontend build succeeds, a blocked run preserves the previous forecast, and a clear run publishes matching review and forecast outputs.

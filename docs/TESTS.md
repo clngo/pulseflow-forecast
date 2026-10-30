@@ -111,7 +111,7 @@ Normalization ignores capitalization, punctuation, and repeated spaces. Automati
 | `T18` | Rows in the current or prior file share an ID but contain different meaningful values. | `BLOCK("conflicting_duplicate")`; evidence contains each distinct conflicting row; exact copies do not add conflict choices; no forecast is published. |
 | `T19` | Same source ID but different customer, product, or owner. | `BLOCK("conflicting_duplicate")`; evidence contains every conflicting source row; pipeline chooses neither identity. |
 
-For `T18`, a conflict in either week is resolved separately using its source filename and selected source row. The pipeline performs week-over-week comparison only after both files contain one authoritative record per ID.
+For `T18`, a conflict in either week is resolved separately using its source filename, canonical 15-character opportunity ID, and selected source row. The pipeline performs week-over-week comparison only after both files contain one authoritative record per ID.
 
 ## 7. Cross-Source Duplicate Scenarios
 
@@ -144,13 +144,14 @@ Current and prior Salesforce files are standardized and deduplicated before comp
 | `T30` | Prior stage is open; current stage is `Closed Lost`. | Deal appears once in `week_over_week.closed_lost_deals` and is absent from active forecast deals. |
 | `T31` | Active Q4 stage changed between ordered stages. | Deal appears once in `week_over_week.stage_moves`; prior/current stages and `advanced`/`regressed` direction are exact. |
 | `T32` | Active Q4 annual ACV changed. | Deal appears once in `week_over_week.acv_changes`; `change == current_acv - prior_acv`; direction is exact. |
+| `T41` | The prior file contains a 15-character Salesforce ID and the current file contains the equivalent 18-character ID. | Match using the exact, case-sensitive first 15 characters; do not report a new deal; report applicable stage and ACV changes using the original current-file ID. |
 
 ## 10. Resolution Scenarios
 
 | ID | Input condition | Required result |
 |---|---|---|
 | `T33` | `resolutions.json` maps one blank-ID scorecard `source_row` to a valid Salesforce opportunity and includes a reason. | `AUDIT("missing_scorecard_id", "human_resolved")`; mapped Salesforce ID is used; audit source row equals the configured scorecard row; resolution source is `config/resolutions.json`. |
-| `T34` | `resolutions.json` selects one valid duplicate row using source filename, opportunity ID, source row, and reason. | `AUDIT("conflicting_duplicate", "human_resolved")`; selected row is used for forecast and week-over-week; `source_conflict is None`. |
+| `T34` | `resolutions.json` selects one valid duplicate row using source filename, canonical 15-character opportunity ID, source row, and reason. | `AUDIT("conflicting_duplicate", "human_resolved")`; selected row is used for forecast and week-over-week; `source_conflict is None`. |
 | `T35` | `resolutions.json` provides a valid record override and reason. | `AUDIT("manual_record_override", "human_resolved")`; corrected field equals confirmed value; original and resulting values are exact. |
 | `T36` | Resolution is incomplete or refers to an unsupported or stale record, scorecard row, source, or field. | `BLOCK("invalid_resolution")`, `BLOCK("stale_scorecard_mapping")`, `BLOCK("stale_record_override")`, or `BLOCK("stale_duplicate_resolution")`; evidence contains the invalid resolution. |
 | `T37` | A scorecard row has no ID and no unique exact hospital, product, and sales rep match. | `BLOCK("missing_scorecard_id")`; `issues` contains the scorecard source row and ranked candidates; required action is confirmation in `config/resolutions.json`; no duplicate scorecard-review collection is returned. |
@@ -160,6 +161,6 @@ Current and prior Salesforce files are standardized and deduplicated before comp
 
 ## 11. Acceptance Rule
 
-The pipeline conforms to this contract when every implemented pytest scenario `T01` through `T40` passes.
+The pipeline conforms to this contract when every implemented pytest scenario `T01` through `T41` passes.
 
 Adding a scenario requires the next unused ID, one new row in this document, and a pytest function containing the same ID.
