@@ -15,3 +15,5 @@ app/.vite/
 *.tsbuildinfo
 
 .DS_Store
+
+checks/

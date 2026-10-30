@@ -63,11 +63,9 @@ The record is valid and can be used as supplied. It may also undergo a determini
 
 The forecast may publish, but the pipeline records something worth explaining. Examples include an exact duplicate being removed, a workbook probability being replaced by the written GPA rule, a stale close date, or a human-confirmed resolution.
 
-An identity-consistent duplicate conflict is also allowed to publish as an unresolved forecast variant. The lowest expected value becomes the conservative baseline, and the other valid source states remain visible in the Deal Room.
-
 ### Blocked
 
-The pipeline cannot establish a safe result. Examples include a missing required file, invalid amount, unknown stage, identity-conflicting duplicate, materially conflicting cross-system copy, or missing scorecard ID with no unique exact match.
+The pipeline cannot establish a safe result. Examples include a missing required file, invalid amount, unknown stage, any conflicting same-source duplicate, materially conflicting cross-system copy, or missing scorecard ID with no unique exact match.
 
 When blocked, the pipeline returns no new forecast object. The issue must be corrected in the source or resolved through an allowed human decision.
 
@@ -141,21 +139,24 @@ Candidate generation first requires the product and sales representative to matc
 Duplicates are evaluated after standardization so monthly and annual representations can be compared fairly.
 
 - **Exact same-source copies:** keep one calculation record and audit the removal.
-- **Same identity, different valid values:** use the lowest expected-value row as the conservative baseline and preserve each distinct variant.
-- **Same ID, different identity:** block because the pipeline cannot know which customer, product, or owner is correct.
+- **Same source ID, different meaningful values:** block publication until a person selects exactly one authoritative row.
 - **Equivalent Salesforce and CareBridge deal:** count once and retain Salesforce as the calculation record.
 - **Strong cross-source match with material value conflict:** block and show both records.
 
-A human can permanently select an authoritative same-source variant through `duplicate_selections` in `resolutions.json`.
+A duplicate selection identifies the source filename, opportunity ID, selected source row, and reason. This allows current- and prior-week conflicts to be resolved independently. Once selected, the same record is used for the forecast, week-over-week comparison, and Deal Room; unresolved variants are never published.
 
 ## 8. Human resolutions
 
 `config/resolutions.json` is an input, not a machine-generated report. It keeps a human decision reproducible across complete pipeline reruns.
 
+When publication is blocked, the frontend does not load the last forecast into the normal dashboard. It displays an independent review page based on `review.json`. The page can merge supported human decisions into the current resolution structure and download a complete `resolutions.json`; the operator then replaces the config file and reruns the pipeline. This keeps browser code from silently writing into the project while avoiding hand-written JSON.
+
+The page deliberately separates **Resolution file** fixes from **Source file** fixes. Missing scorecard mappings, duplicate selections, and confirmed record overrides can be expressed using the existing resolution schema. Structural errors, missing columns, invalid supplied identifiers, and other decisions unsupported by that schema remain source-file corrections.
+
 It supports three actions:
 
 1. `scorecard_mappings` maps a blank-ID Excel source row to the confirmed Salesforce opportunity and records a reason. Using the row rather than hospital name allows multiple deals for the same hospital.
-2. `duplicate_selections` confirms one authoritative row from a reported conflict.
+2. `duplicate_selections` confirms one authoritative row from a reported source-specific conflict.
 3. `record_overrides` supplies a confirmed correction to an allowed CSV field, with a reason.
 
 The pipeline validates every resolution against the current source data. A missing target, disallowed field, ambiguous row, missing reason, or outdated mapping blocks publication. This is deliberate: silently ignoring a stale decision could produce a forecast that looks valid but no longer reflects the human's intent.
@@ -166,7 +167,7 @@ The resolution file is cumulative. A rerun applies all active decisions and rege
 
 ## 9. Week-over-week comparison
 
-The current and prior Salesforce exports are standardized and deduplicated before comparison. Deals are joined using the canonical Salesforce ID.
+The current and prior Salesforce exports are standardized and deduplicated before comparison. Any conflicting duplicate in either file blocks publication until one row is selected. Deals are then joined using the canonical 15-character Salesforce ID, so equivalent 15- and 18-character IDs compare as the same opportunity.
 
 The output reports:
 
@@ -226,13 +227,13 @@ Every run recalculates the full result. With four small files this is simpler an
 
 Exact duplicates and written probability rules are safe to automate. Identity conflicts and ambiguous scorecard mappings require a human. This creates more visible review work but avoids silently turning a plausible guess into an official number.
 
-### Publish a bounded duplicate variant
+### Block ambiguous duplicates
 
-For one identity-consistent conflict, the system publishes the lowest valid expected value and exposes the alternatives. This keeps the forecast usable while clearly bounding uncertainty. The tradeoff is that the baseline is conservative, not necessarily the eventual authoritative answer.
+The system never publishes a conflicting same-source duplicate as a forecast variant. A person must select one authoritative row for the specific source file. This pauses publication, but ensures the forecast, week-over-week comparison, and Deal Room all use the same confirmed record.
 
 ### Keep the resolution interface file-based
 
-JSON is reviewable, versionable, and requires no server. It is appropriate for this exercise but less friendly than a governed approval screen. The dashboard therefore shows evidence but cannot submit decisions.
+JSON is reviewable, versionable, and requires no server. The browser review page helps the operator build and download the file, but the operator still replaces `config/resolutions.json` and reruns the pipeline explicitly.
 
 ### Recommend a Python virtual environment
 

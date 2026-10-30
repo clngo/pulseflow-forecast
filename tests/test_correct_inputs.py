@@ -71,6 +71,56 @@ def test_t04_carebridge_annual_amount_is_not_annualized(tmp_path) -> None:
     assert not any(item["type"] == "monthly_to_annual_conversion" for item in forecast["audit_log"])
 
 
+@pytest.mark.parametrize(
+    ("scenario_id", "record_id", "expected_stage", "expected_billing"),
+    [
+        ("salesforce_capitalization", "006TEST00000002AAA", "Technical Validation", "Annual"),
+        ("carebridge_capitalization", "HS-CLEAN-1", "Contract Sent", "Monthly"),
+    ],
+)
+def test_t39_known_stage_and_billing_capitalization_is_normalized(
+    tmp_path,
+    scenario_id,
+    record_id,
+    expected_stage,
+    expected_billing,
+) -> None:
+    root = make_scenario_dataset(tmp_path / scenario_id, scenario_id)
+
+    review, forecast = build_outputs(root)
+
+    assert review["status"] == "clear"
+    assert forecast is not None
+    deal = deal_by_id(forecast, record_id)
+    assert deal["stage"] == expected_stage
+    assert deal["billing_frequency"] == expected_billing
+    normalized_fields = {
+        audit["resulting_value"]["field"]
+        for audit in forecast["audit_log"]
+        if audit["type"] == "capitalization_normalization" and audit["record_id"] == record_id
+    }
+    expected_fields = (
+        {"Stage", "Billing_Frequency"}
+        if record_id.startswith("006")
+        else {"Deal_Stage", "Billing_Frequency"}
+    )
+    assert normalized_fields == expected_fields
+
+
+def test_t40_health_system_capitalization_does_not_create_identity_conflict(tmp_path) -> None:
+    root = make_scenario_dataset(
+        tmp_path / "health-system-capitalization",
+        "health_system_capitalization_duplicate",
+    )
+
+    review, forecast = build_outputs(root)
+
+    assert review["status"] == "clear"
+    assert forecast is not None
+    audit = find_audit(forecast, "exact_duplicate", "006TEST00000002AAA")
+    assert audit["status"] == "automatically_resolved"
+
+
 def test_t06_valid_longtail_probability_is_used_as_supplied(tmp_path) -> None:
     root = make_scenario_dataset(
         tmp_path / "valid-stage-probability",
@@ -182,26 +232,20 @@ def test_t17_exact_duplicate_is_counted_once_and_audited(tmp_path) -> None:
     assert audit["resulting_value"]["calculation_record_count"] == 1
 
 
-def test_t18_financial_variants_use_conservative_baseline(tmp_path) -> None:
+def test_t18_conflicting_duplicate_blocks_publication(tmp_path) -> None:
     root = make_scenario_dataset(tmp_path / "two-variants", "two_conflicting_duplicates")
 
     review, forecast = build_outputs(root)
 
-    assert review["status"] == "clear"
-    assert forecast is not None
-    deal = deal_by_id(forecast, "006TEST00000002AAA")
-    assert deal["expected_value"] == 60_000
-    assert len(deal["source_conflict"]["variants"]) == 2
-    audit = find_audit(forecast, "conflicting_duplicate", deal["opportunity_id"])
-    assert audit["status"] == "unresolved"
-    assert audit["forecast_impact"] == {
-        "baseline": 60_000,
-        "maximum_alternative": 160_000,
-        "difference": 100_000,
-    }
+    assert review["status"] == "blocked"
+    assert forecast is None
+    issue = next(item for item in review["issues"] if item["type"] == "conflicting_duplicate")
+    assert issue["source"] == "1_sfdc_pipeline_current.csv"
+    assert issue["source_rows"] == [3, 4]
+    assert issue["required_action"] == "Select one authoritative source row in config/resolutions.json"
 
 
-def test_t18_exact_copies_do_not_create_additional_variants(tmp_path) -> None:
+def test_t18_exact_copies_do_not_add_conflicting_rows(tmp_path) -> None:
     root = make_scenario_dataset(
         tmp_path / "mixed-duplicates",
         "mixed_exact_and_conflicting_duplicates",
@@ -209,15 +253,25 @@ def test_t18_exact_copies_do_not_create_additional_variants(tmp_path) -> None:
 
     review, forecast = build_outputs(root)
 
-    assert review["status"] == "clear"
-    assert forecast is not None
-    deal = deal_by_id(forecast, "006TEST00000002AAA")
-    assert len(deal["source_conflict"]["variants"]) == 3
-    assert {variant["expected_value"] for variant in deal["source_conflict"]["variants"]} == {
-        60_000,
-        120_000,
-        160_000,
-    }
+    assert review["status"] == "blocked"
+    assert forecast is None
+    issue = next(item for item in review["issues"] if item["type"] == "conflicting_duplicate")
+    assert len(issue["source_rows"]) == 3
+
+
+def test_t18_prior_file_conflict_also_blocks(tmp_path) -> None:
+    root = make_scenario_dataset(
+        tmp_path / "prior-conflicting-duplicates",
+        "prior_conflicting_duplicates",
+    )
+
+    review, forecast = build_outputs(root)
+
+    assert review["status"] == "blocked"
+    assert forecast is None
+    issue = next(item for item in review["issues"] if item["type"] == "conflicting_duplicate")
+    assert issue["source"] == "2_sfdc_pipeline_prior_week.csv"
+    assert issue["source_rows"] == [3, 4]
 
 
 def test_t20_equivalent_cross_source_deal_is_counted_once(tmp_path) -> None:

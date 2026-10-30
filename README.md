@@ -19,7 +19,7 @@ The source CSV and Excel files are never changed by the pipeline.
 - **Overview** shows the official forecast, board-target variance, and forecast composition.
 - **Deal Room** provides browser-only what-if analysis. Changes here do not change the official forecast.
 - **Week over week** shows new, slipped, Closed Lost, stage-movement, and ACV-change records.
-- **Data hygiene** shows automatic corrections, warnings, confirmed human decisions, and unresolved variants.
+- **Data hygiene** shows automatic corrections, warnings, and confirmed human decisions.
 
 ## Run the dashboard
 
@@ -80,7 +80,11 @@ If a run is blocked, `review.json` is updated but the last valid `forecast.json`
 
 ## Resolving a blocker
 
-Start with `data/output/review.json`. Each issue identifies the source file, source row, record ID, evidence, and required action.
+When `review.json` contains blockers, the browser shows a separate **Pipeline Review** page instead of the forecast dashboard. Each issue identifies the source file, source row, record ID, evidence, and required action.
+
+For supported human decisions, complete the fields on that page and click **Download resolutions.json**. The downloaded file includes the existing valid decisions plus the new corrections. Replace `config/resolutions.json` with that download, rerun the pipeline, and refresh the browser.
+
+Some problems cannot be safely handled as a resolution—for example, a missing required column. The page labels these as **Source file** fixes and tells you which input must be corrected. It never modifies a CSV or Excel file.
 
 Most human-confirmed decisions belong in `config/resolutions.json`. Do not edit `forecast.json` or `review.json`; they are regenerated on every run.
 
@@ -120,13 +124,14 @@ Suggestions are evidence only; the pipeline never accepts a fuzzy name match aut
 
 ### 2. Select the authoritative duplicate
 
-When two rows have the same deal identity but disagree, a person can confirm the authoritative source row:
+When rows in one source file share an ID but contain different meaningful values, the pipeline blocks publication. A person must confirm exactly one authoritative source row:
 
 ```json
 {
   "scorecard_mappings": [],
   "duplicate_selections": [
     {
+      "source": "1_sfdc_pipeline_current.csv",
       "opportunity_id": "006PF000001L008YAC",
       "selected_source_row": 11,
       "reason": "Confirmed against the Salesforce opportunity history"
@@ -136,7 +141,7 @@ When two rows have the same deal identity but disagree, a person can confirm the
 }
 ```
 
-The selected row must be one of the rows reported by the pipeline, and a reason is required.
+The source filename and selected row must exactly match the conflict reported by the pipeline, and a reason is required. Current- and prior-week conflicts are resolved separately because each file can require a different authoritative row. The selected record is then used consistently by the forecast, week-over-week comparison, and Deal Room.
 
 ### 3. Correct a known source value
 

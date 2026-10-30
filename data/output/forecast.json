@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "reporting_date": "2026-10-15",
-  "generated_at": "2026-10-29T20:29:07Z",
+  "generated_at": "2026-10-30T00:07:26Z",
   "board_target": 12000000,
   "summary": {
     "total_expected_sales": 12982400.0,
@@ -9,8 +9,7 @@
     "salesforce_longtail_expected_value": 4294000.0,
     "carebridge_longtail_expected_value": 848400.0,
     "variance_to_target": 982400.0,
-    "baseline_status": "valid_with_unresolved_variants",
-    "unresolved_variant_count": 1
+    "baseline_status": "valid"
   },
   "deals": [
     {
@@ -557,28 +556,7 @@
       "vp_notes": null,
       "probability": 0.6,
       "expected_value": 240000.0,
-      "source_conflict": {
-        "status": "unresolved",
-        "baseline_source_row": 10,
-        "variants": [
-          {
-            "source_row": 10,
-            "stage": "Business Approval",
-            "stage_probability": 0.6,
-            "amount": 400000.0,
-            "annual_acv": 400000.0,
-            "expected_value": 240000.0
-          },
-          {
-            "source_row": 11,
-            "stage": "Contract Negotiations",
-            "stage_probability": 0.8,
-            "amount": 550000.0,
-            "annual_acv": 550000.0,
-            "expected_value": 440000.0
-          }
-        ]
-      }
+      "source_conflict": null
     },
     {
       "opportunity_id": "006PF000001L014YAC",
@@ -1145,7 +1123,7 @@
     {
       "audit_id": "audit-001",
       "type": "conflicting_duplicate",
-      "status": "unresolved",
+      "status": "human_resolved",
       "source": "1_sfdc_pipeline_current.csv",
       "source_rows": [
         10,
@@ -1173,16 +1151,11 @@
         ]
       },
       "resulting_value": {
-        "baseline_source_row": 10,
-        "baseline_expected_value": 240000.0
+        "selected_source_row": 10
       },
-      "action": "Used the lowest expected-value source row as the conservative baseline and exposed every valid variant",
-      "resolution_source": "conservative_baseline_policy",
-      "forecast_impact": {
-        "baseline": 240000.0,
-        "maximum_alternative": 440000.0,
-        "difference": 200000.0
-      }
+      "action": "Used the authoritatively selected source row: Checked prior for same stage",
+      "resolution_source": "config/resolutions.json",
+      "forecast_impact": null
     },
     {
       "audit_id": "audit-002",
@@ -1242,7 +1215,7 @@
       "resulting_value": {
         "opportunity_id": "006PF000001T005YAC"
       },
-      "action": "Applied and validated the confirmed Salesforce mapping: Confirmed against the current Salesforce pipeline",
+      "action": "Applied and validated the confirmed Salesforce mapping: Same name, product, and sales rep",
       "resolution_source": "config/resolutions.json",
       "forecast_impact": null
     },
@@ -1282,7 +1255,7 @@
       "resulting_value": {
         "opportunity_id": "006PF000001T006YAC"
       },
-      "action": "Applied and validated the confirmed Salesforce mapping: Confirmed against the current Salesforce pipeline",
+      "action": "Applied and validated the confirmed Salesforce mapping: Same name, product, and sales rep",
       "resolution_source": "config/resolutions.json",
       "forecast_impact": null
     },
@@ -1302,7 +1275,7 @@
       "resulting_value": {
         "opportunity_id": "006PF000001T007YAC"
       },
-      "action": "Applied and validated the confirmed Salesforce mapping: Confirmed against the current Salesforce pipeline",
+      "action": "Applied and validated the confirmed Salesforce mapping: Same name, product, and sales rep",
       "resolution_source": "config/resolutions.json",
       "forecast_impact": null
     },
@@ -1322,7 +1295,7 @@
       "resulting_value": {
         "opportunity_id": "006PF000001T008YAC"
       },
-      "action": "Applied and validated the confirmed Salesforce mapping: Confirmed against the current Salesforce pipeline",
+      "action": "Applied and validated the confirmed Salesforce mapping: Same name, product, and sales rep",
       "resolution_source": "config/resolutions.json",
       "forecast_impact": null
     },

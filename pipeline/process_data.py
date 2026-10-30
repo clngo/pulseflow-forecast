@@ -38,6 +38,15 @@ OPEN_SF_STAGES = (
 )
 SF_STAGE_ORDER = {stage: index for index, stage in enumerate(OPEN_SF_STAGES)}
 SF_ALLOWED_STAGES = set(OPEN_SF_STAGES) | {"Closed Lost"}
+BILLING_FREQUENCIES = ("Annual", "Monthly")
+CAREBRIDGE_STAGES = (
+    "Introduction",
+    "Qualified to Buy",
+    "Decision Maker Bought-In",
+    "Contract Sent",
+    "Closed Lost",
+)
+CASE_INSENSITIVE_IDENTITY_FIELDS = {"Health_System", "Company_Name"}
 ALLOWED_OVERRIDE_FIELDS = {
     "Fiscal_Period",
     "Health_System",
@@ -121,6 +130,19 @@ def calculate_top8_probability(leadership: int, commercial: int, contractual: in
 
 def normalize_name(value: str) -> str:
     return " ".join(re.findall(r"[a-z0-9]+", str(value).lower()))
+
+
+def canonicalize_case(value: str, allowed_values: tuple[str, ...] | set[str]) -> str:
+    """Return the official spelling when a known value differs only by case."""
+    match = next((allowed for allowed in allowed_values if allowed.casefold() == value.casefold()), None)
+    return match if match is not None else value
+
+
+def comparison_value(record: dict[str, Any], field: str) -> Any:
+    value = record.get(field)
+    if field in CASE_INSENSITIVE_IDENTITY_FIELDS and isinstance(value, str):
+        return value.casefold()
+    return value
 
 
 def name_similarity(left: str, right: str) -> float:
@@ -266,6 +288,7 @@ def apply_record_overrides(
 def normalize_salesforce(
     frame: pd.DataFrame,
     source_file: str,
+    add_audit: Callable[..., None],
     add_issue: Callable[..., None],
 ) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
@@ -287,6 +310,25 @@ def normalize_salesforce(
                 row[field] = str(row[field]).strip()
         source_row = int(row["source_row"])
         source_id = row["Opportunity_ID"]
+        for field, allowed_values in (
+            ("Stage", SF_ALLOWED_STAGES),
+            ("Billing_Frequency", {"Annual"}),
+        ):
+            original = row[field]
+            row[field] = canonicalize_case(original, allowed_values)
+            if row[field] != original:
+                add_audit(
+                    "capitalization_normalization",
+                    "automatically_resolved",
+                    source_file,
+                    [source_row],
+                    source_id,
+                    {"field": field, "value": original},
+                    {"field": field, "value": row[field]},
+                    f"Standardized {field} capitalization",
+                    "case_insensitive_category_rule",
+                    0,
+                )
         errors: list[str] = []
         try:
             canonical_id = canonical_salesforce_id(source_id)
@@ -341,6 +383,7 @@ def normalize_salesforce(
 def normalize_carebridge(
     frame: pd.DataFrame,
     source_file: str,
+    add_audit: Callable[..., None],
     add_issue: Callable[..., None],
 ) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
@@ -360,6 +403,25 @@ def normalize_carebridge(
             row[field] = str(row[field]).strip()
         source_row = int(row["source_row"])
         source_id = row["HubSpot_Deal_ID"]
+        for field, allowed_values in (
+            ("Deal_Stage", CAREBRIDGE_STAGES),
+            ("Billing_Frequency", BILLING_FREQUENCIES),
+        ):
+            original = row[field]
+            row[field] = canonicalize_case(original, allowed_values)
+            if row[field] != original:
+                add_audit(
+                    "capitalization_normalization",
+                    "automatically_resolved",
+                    source_file,
+                    [source_row],
+                    source_id,
+                    {"field": field, "value": original},
+                    {"field": field, "value": row[field]},
+                    f"Standardized {field} capitalization",
+                    "case_insensitive_category_rule",
+                    0,
+                )
         errors: list[str] = []
         if not source_id:
             errors.append("HubSpot_Deal_ID is required")
@@ -409,13 +471,11 @@ def normalize_carebridge(
 def deduplicate_records(
     records: list[dict[str, Any]],
     source_file: str,
-    identity_fields: list[str],
     comparison_fields: list[str],
     duplicate_resolutions: list[dict[str, Any]],
     add_audit: Callable[..., None],
     add_issue: Callable[..., None],
     used_duplicate_resolutions: set[int],
-    allow_variants: bool,
 ) -> list[dict[str, Any]]:
     groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for record in records:
@@ -430,7 +490,7 @@ def deduplicate_records(
         unique: list[dict[str, Any]] = []
         fingerprints: set[tuple[Any, ...]] = set()
         for candidate in candidates:
-            fingerprint = tuple(candidate.get(field) for field in comparison_fields)
+            fingerprint = tuple(comparison_value(candidate, field) for field in comparison_fields)
             if fingerprint not in fingerprints:
                 fingerprints.add(fingerprint)
                 unique.append(candidate)
@@ -452,23 +512,15 @@ def deduplicate_records(
             output.append(retained)
             continue
 
-        identity_values = {tuple(candidate.get(field) for field in identity_fields) for candidate in unique}
-        if len(identity_values) != 1 or not allow_variants:
-            add_issue(
-                "conflicting_duplicate",
-                source_file,
-                [int(candidate["source_row"]) for candidate in unique],
-                candidates[0]["source_id"],
-                "Duplicate rows disagree and cannot be safely represented as forecast variants",
-                [{field: candidate.get(field) for field in comparison_fields} for candidate in unique],
-                "Correct the source data or add a confirmed duplicate selection",
-            )
-            continue
-
         matching_resolution: tuple[int, dict[str, Any]] | None = None
         source_ids = {candidate["source_id"] for candidate in unique} | {canonical_id}
         for position, resolution in enumerate(duplicate_resolutions):
-            if str(resolution.get("opportunity_id", "")).strip() in source_ids:
+            if position in used_duplicate_resolutions or not isinstance(resolution, dict):
+                continue
+            if (
+                str(resolution.get("source", "")).strip() == source_file
+                and str(resolution.get("opportunity_id", "")).strip() in source_ids
+            ):
                 matching_resolution = (position, resolution)
                 break
 
@@ -506,30 +558,15 @@ def deduplicate_records(
             output.append(retained)
             continue
 
-        retained = min(unique, key=lambda candidate: candidate["annual_acv"] * candidate["stage_probability"])
-        retained = dict(retained)
-        retained["_unresolved_variants"] = unique
-        expected_values = [candidate["annual_acv"] * candidate["stage_probability"] for candidate in unique]
-        add_audit(
+        add_issue(
             "conflicting_duplicate",
-            "unresolved",
             source_file,
             [int(candidate["source_row"]) for candidate in unique],
-            retained["source_id"],
-            {"variants": [compact_variant(candidate) for candidate in unique]},
-            {
-                "baseline_source_row": int(retained["source_row"]),
-                "baseline_expected_value": retained["annual_acv"] * retained["stage_probability"],
-            },
-            "Used the lowest expected-value source row as the conservative baseline and exposed every valid variant",
-            "conservative_baseline_policy",
-            {
-                "baseline": min(expected_values),
-                "maximum_alternative": max(expected_values),
-                "difference": max(expected_values) - min(expected_values),
-            },
+            candidates[0]["source_id"],
+            "Duplicate rows contain different meaningful values",
+            [{field: candidate.get(field) for field in comparison_fields} for candidate in unique],
+            "Select one authoritative source row in config/resolutions.json",
         )
-        output.append(retained)
     return output
 
 
@@ -810,11 +847,15 @@ def build_outputs(
                 "Remove or update the stale override",
             )
 
-    current_records = normalize_salesforce(current_frame, current_file, add_issue)
-    prior_records = normalize_salesforce(prior_frame, prior_file, add_issue)
-    carebridge_records = normalize_carebridge(carebridge_frame, carebridge_file, add_issue)
+    current_records = normalize_salesforce(current_frame, current_file, add_audit, add_issue)
+    prior_records = normalize_salesforce(prior_frame, prior_file, add_audit, add_issue)
+    carebridge_records = normalize_carebridge(
+        carebridge_frame,
+        carebridge_file,
+        add_audit,
+        add_issue,
+    )
 
-    sf_identity = ["Health_System", "Product", "Sales_Rep", "Billing_Frequency", "Region", "Created_Date"]
     sf_comparison = [
         "Fiscal_Period",
         "Health_System",
@@ -829,7 +870,6 @@ def build_outputs(
         "Sales_Rep",
         "Region",
     ]
-    hs_identity = ["Company_Name", "Product", "AE_Owner", "Billing_Frequency"]
     hs_comparison = [
         "Fiscal_Period",
         "Company_Name",
@@ -842,38 +882,63 @@ def build_outputs(
         "AE_Owner",
     ]
     used_duplicate_resolutions: set[int] = set()
+    for position, resolution in enumerate(resolutions["duplicate_selections"]):
+        if not isinstance(resolution, dict):
+            used_duplicate_resolutions.add(position)
+            add_issue(
+                "invalid_duplicate_resolution",
+                "config/resolutions.json",
+                [],
+                None,
+                "Each duplicate selection must be a JSON object",
+                resolution,
+                "Replace the invalid duplicate selection",
+            )
+            continue
+        selected_row = resolution.get("selected_source_row")
+        if (
+            not str(resolution.get("source", "")).strip()
+            or not str(resolution.get("opportunity_id", "")).strip()
+            or not isinstance(selected_row, int)
+            or isinstance(selected_row, bool)
+            or not str(resolution.get("reason", "")).strip()
+        ):
+            used_duplicate_resolutions.add(position)
+            add_issue(
+                "invalid_duplicate_resolution",
+                "config/resolutions.json",
+                [selected_row] if isinstance(selected_row, int) and not isinstance(selected_row, bool) else [],
+                str(resolution.get("opportunity_id", "")).strip() or None,
+                "A duplicate selection requires source, opportunity_id, selected_source_row, and reason",
+                resolution,
+                "Correct the duplicate selection in config/resolutions.json",
+            )
     current_records = deduplicate_records(
         current_records,
         current_file,
-        sf_identity,
         sf_comparison,
         resolutions["duplicate_selections"],
         add_audit,
         add_issue,
         used_duplicate_resolutions,
-        True,
     )
     prior_records = deduplicate_records(
         prior_records,
         prior_file,
-        sf_identity,
         sf_comparison,
-        [],
+        resolutions["duplicate_selections"],
         add_audit,
         add_issue,
-        set(),
-        False,
+        used_duplicate_resolutions,
     )
     carebridge_records = deduplicate_records(
         carebridge_records,
         carebridge_file,
-        hs_identity,
         hs_comparison,
         resolutions["duplicate_selections"],
         add_audit,
         add_issue,
         used_duplicate_resolutions,
-        True,
     )
     for position, resolution in enumerate(resolutions["duplicate_selections"]):
         if position not in used_duplicate_resolutions:
@@ -1218,50 +1283,27 @@ def build_outputs(
             "expected_value": record["annual_acv"] * probability,
             "source_conflict": None,
         }
-        if record.get("_unresolved_variants"):
-            variants = []
-            for variant in record["_unresolved_variants"]:
-                variant_probability = probability if top8 else variant["stage_probability"]
-                variants.append(
-                    {
-                        **compact_variant(variant),
-                        "expected_value": variant["annual_acv"] * variant_probability,
-                    }
-                )
-            deal["source_conflict"] = {
-                "status": "unresolved",
-                "baseline_source_row": int(record["source_row"]),
-                "variants": variants,
-            }
         deals.append(deal)
 
-    unique_carebridge_records: list[dict[str, Any]] = []
-    seen_hs_rows: set[int] = set()
     for record in carebridge_records:
-        variants = record.get("_unresolved_variants", [record])
-        for variant in variants:
-            if int(variant["source_row"]) in seen_hs_rows:
-                continue
-            seen_hs_rows.add(int(variant["source_row"]))
-            unique_carebridge_records.append(variant)
-            if variant["Billing_Frequency"] == "Monthly":
-                active_impact = (
-                    (variant["annual_acv"] - variant["amount"]) * variant["stage_probability"]
-                    if is_active_carebridge(variant)
-                    else 0
-                )
-                add_audit(
-                    "monthly_to_annual_conversion",
-                    "automatically_resolved",
-                    carebridge_file,
-                    [int(variant["source_row"])],
-                    variant["source_id"],
-                    {"amount": variant["amount"], "billing_frequency": "Monthly"},
-                    {"annual_acv": variant["annual_acv"]},
-                    "Multiplied the monthly amount by 12",
-                    "challenge_rule_1",
-                    active_impact,
-                )
+        if record["Billing_Frequency"] == "Monthly":
+            active_impact = (
+                (record["annual_acv"] - record["amount"]) * record["stage_probability"]
+                if is_active_carebridge(record)
+                else 0
+            )
+            add_audit(
+                "monthly_to_annual_conversion",
+                "automatically_resolved",
+                carebridge_file,
+                [int(record["source_row"])],
+                record["source_id"],
+                {"amount": record["amount"], "billing_frequency": "Monthly"},
+                {"annual_acv": record["annual_acv"]},
+                "Multiplied the monthly amount by 12",
+                "challenge_rule_1",
+                active_impact,
+            )
 
     for record in carebridge_records:
         if not is_active_carebridge(record):
@@ -1289,12 +1331,6 @@ def build_outputs(
             "expected_value": record["annual_acv"] * record["stage_probability"],
             "source_conflict": None,
         }
-        if record.get("_unresolved_variants"):
-            deal["source_conflict"] = {
-                "status": "unresolved",
-                "baseline_source_row": int(record["source_row"]),
-                "variants": [compact_variant(variant) for variant in record["_unresolved_variants"]],
-            }
         deals.append(deal)
 
     # Reconcile strong cross-source identity matches, or block when their financial values conflict.
@@ -1418,7 +1454,6 @@ def build_outputs(
         deal["expected_value"] for deal in deals if deal["forecast_bucket"] == "carebridge_longtail"
     )
     total = top8_value + sf_longtail_value + carebridge_value
-    unresolved_count = sum(1 for deal in deals if deal["source_conflict"])
     forecast = {
         "schema_version": 1,
         "reporting_date": REPORTING_DATE.isoformat(),
@@ -1430,8 +1465,7 @@ def build_outputs(
             "salesforce_longtail_expected_value": sf_longtail_value,
             "carebridge_longtail_expected_value": carebridge_value,
             "variance_to_target": total - BOARD_TARGET,
-            "baseline_status": "valid_with_unresolved_variants" if unresolved_count else "valid",
-            "unresolved_variant_count": unresolved_count,
+            "baseline_status": "valid",
         },
         "deals": deals,
         "week_over_week": week_over_week,

@@ -108,19 +108,10 @@ Normalization ignores capitalization, punctuation, and repeated spaces. Automati
 | ID | Input condition | Required result |
 |---|---|---|
 | `T17` | Rows have the same source ID and identical meaningful values. | `AUDIT("exact_duplicate", "automatically_resolved")`; one published deal; audit records duplicate count and calculation count `1`. |
-| `T18` | Same ID, customer, product, and owner; different valid stage, probability, or amount. | `AUDIT("conflicting_duplicate", "unresolved")`; lowest expected-value variant is baseline; all distinct variants are preserved; exact copies do not add variants. |
+| `T18` | Rows in the current or prior file share an ID but contain different meaningful values. | `BLOCK("conflicting_duplicate")`; evidence contains each distinct conflicting row; exact copies do not add conflict choices; no forecast is published. |
 | `T19` | Same source ID but different customer, product, or owner. | `BLOCK("conflicting_duplicate")`; evidence contains every conflicting source row; pipeline chooses neither identity. |
 
-For `T18`:
-
-```python
-deal["expected_value"] == min(v["expected_value"] for v in variants)
-audit["forecast_impact"] == {
-    "baseline": min_expected_value,
-    "maximum_alternative": max_expected_value,
-    "difference": max_expected_value - min_expected_value,
-}
-```
+For `T18`, a conflict in either week is resolved separately using its source filename and selected source row. The pipeline performs week-over-week comparison only after both files contain one authoritative record per ID.
 
 ## 7. Cross-Source Duplicate Scenarios
 
@@ -159,14 +150,16 @@ Current and prior Salesforce files are standardized and deduplicated before comp
 | ID | Input condition | Required result |
 |---|---|---|
 | `T33` | `resolutions.json` maps one blank-ID scorecard `source_row` to a valid Salesforce opportunity and includes a reason. | `AUDIT("missing_scorecard_id", "human_resolved")`; mapped Salesforce ID is used; audit source row equals the configured scorecard row; resolution source is `config/resolutions.json`. |
-| `T34` | `resolutions.json` selects one valid duplicate row. | `AUDIT("conflicting_duplicate", "human_resolved")`; selected row is used; `source_conflict is None`. |
+| `T34` | `resolutions.json` selects one valid duplicate row using source filename, opportunity ID, source row, and reason. | `AUDIT("conflicting_duplicate", "human_resolved")`; selected row is used for forecast and week-over-week; `source_conflict is None`. |
 | `T35` | `resolutions.json` provides a valid record override and reason. | `AUDIT("manual_record_override", "human_resolved")`; corrected field equals confirmed value; original and resulting values are exact. |
 | `T36` | Resolution is incomplete or refers to an unsupported or stale record, scorecard row, source, or field. | `BLOCK("invalid_resolution")`, `BLOCK("stale_scorecard_mapping")`, `BLOCK("stale_record_override")`, or `BLOCK("stale_duplicate_resolution")`; evidence contains the invalid resolution. |
 | `T37` | A scorecard row has no ID and no unique exact hospital, product, and sales rep match. | `BLOCK("missing_scorecard_id")`; `issues` contains the scorecard source row and ranked candidates; required action is confirmation in `config/resolutions.json`; no duplicate scorecard-review collection is returned. |
 | `T38` | Two blank-ID scorecard rows use the same hospital name but map to different Salesforce deals by source row. | `PUBLISH`; two separate `AUDIT("missing_scorecard_id", "human_resolved")` entries use the configured source rows and opportunity IDs. |
+| `T39` | A known stage or billing frequency differs from the official value only by capitalization. | `AUDIT("capitalization_normalization", "automatically_resolved")`; publish the official spelling; amount and probability are unchanged. |
+| `T40` | Duplicate health-system or company names differ only by capitalization. | Treat the names as the same identity; preserve the retained row's original display spelling. |
 
 ## 11. Acceptance Rule
 
-The pipeline conforms to this contract when every implemented pytest scenario `T01` through `T38` passes.
+The pipeline conforms to this contract when every implemented pytest scenario `T01` through `T40` passes.
 
 Adding a scenario requires the next unused ID, one new row in this document, and a pytest function containing the same ID.

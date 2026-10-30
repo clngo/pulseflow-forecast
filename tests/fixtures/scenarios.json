@@ -4,6 +4,27 @@
     "description": "Valid baseline with one strategic deal, one Salesforce longtail deal, and one CareBridge deal.",
     "operations": []
   },
+  "salesforce_capitalization": {
+    "expected_outcome": "correct",
+    "description": "Known Salesforce stage and billing values differ only by capitalization.",
+    "operations": [
+      {"action": "set", "dataset": "current", "match": {"Opportunity_ID": "006TEST00000002AAA"}, "values": {"Stage": "technical validation", "Billing_Frequency": "annual"}}
+    ]
+  },
+  "carebridge_capitalization": {
+    "expected_outcome": "correct",
+    "description": "Known CareBridge stage and billing values differ only by capitalization.",
+    "operations": [
+      {"action": "set", "dataset": "carebridge", "match": {"HubSpot_Deal_ID": "HS-CLEAN-1"}, "values": {"Deal_Stage": "contract sent", "Billing_Frequency": "monthly"}}
+    ]
+  },
+  "health_system_capitalization_duplicate": {
+    "expected_outcome": "correct",
+    "description": "Duplicate health-system names differing only by capitalization are the same identity.",
+    "operations": [
+      {"action": "copy_row", "dataset": "current", "match": {"Opportunity_ID": "006TEST00000002AAA"}, "values": {"Health_System": "CLEAN LONGTAIL HEALTH"}}
+    ]
+  },
   "carebridge_annual": {
     "expected_outcome": "correct",
     "description": "A CareBridge annual amount is used without annualization.",
@@ -49,15 +70,22 @@
     ]
   },
   "two_conflicting_duplicates": {
-    "expected_outcome": "correct",
-    "description": "Two financially conflicting but identity-consistent rows remain forecast variants.",
+    "expected_outcome": "human_review",
+    "description": "Two financially conflicting rows require one authoritative source-row selection.",
     "operations": [
       {"action": "copy_row", "dataset": "current", "match": {"Opportunity_ID": "006TEST00000002AAA"}, "values": {"Stage": "Contract Negotiations", "Stage_Probability": "0.80", "Amount": "200000"}}
     ]
   },
+  "prior_conflicting_duplicates": {
+    "expected_outcome": "human_review",
+    "description": "Conflicting rows in the prior file also require a source-specific selection.",
+    "operations": [
+      {"action": "copy_row", "dataset": "prior", "match": {"Opportunity_ID": "006TEST00000002AAA"}, "values": {"Stage": "Contract Negotiations", "Stage_Probability": "0.80", "Amount": "200000"}}
+    ]
+  },
   "mixed_exact_and_conflicting_duplicates": {
-    "expected_outcome": "correct",
-    "description": "Exact copies do not increase the number of distinct conflicting variants.",
+    "expected_outcome": "human_review",
+    "description": "Exact copies do not increase the number of distinct rows in a blocking conflict.",
     "operations": [
       {"action": "copy_row", "dataset": "current", "match": {"Opportunity_ID": "006TEST00000002AAA"}},
       {"action": "copy_row", "dataset": "current", "match": {"Opportunity_ID": "006TEST00000002AAA"}, "values": {"Amount": "200000", "Stage": "Contract Negotiations", "Stage_Probability": "0.80"}},

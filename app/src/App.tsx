@@ -20,21 +20,6 @@ interface Top8Scores {
   composite_gpa: number;
 }
 
-interface SourceVariant {
-  source_row: number;
-  stage: string;
-  stage_probability: number;
-  amount: number;
-  annual_acv: number;
-  expected_value: number;
-}
-
-interface SourceConflict {
-  status: "unresolved";
-  baseline_source_row: number;
-  variants: SourceVariant[];
-}
-
 interface Deal {
   opportunity_id: string;
   canonical_id: string;
@@ -56,7 +41,7 @@ interface Deal {
   vp_notes: string | null;
   probability: number;
   expected_value: number;
-  source_conflict: SourceConflict | null;
+  source_conflict: null;
 }
 
 interface ScenarioDeal extends Deal {
@@ -69,7 +54,7 @@ interface ScenarioDeal extends Deal {
 interface AuditEntry {
   audit_id: string;
   type: string;
-  status: "automatically_resolved" | "human_resolved" | "warning" | "unresolved";
+  status: "automatically_resolved" | "human_resolved" | "warning";
   source: string;
   source_rows: number[];
   record_id: string | null;
@@ -100,12 +85,91 @@ interface ForecastData {
     carebridge_longtail_expected_value: number;
     variance_to_target: number;
     baseline_status: string;
-    unresolved_variant_count: number;
   };
   deals: Deal[];
   week_over_week: Record<string, MovementItem[]>;
   audit_log: AuditEntry[];
 }
+
+interface ReviewIssue {
+  issue_id: string;
+  type: string;
+  status: "blocking";
+  source: string;
+  source_rows: number[];
+  record_id: string | null;
+  message: string;
+  evidence: unknown;
+  required_action: string;
+}
+
+interface ReviewData {
+  schema_version: number;
+  reporting_date: string;
+  generated_at: string;
+  status: "clear" | "blocked";
+  blocking_issue_count: number;
+  issues: ReviewIssue[];
+}
+
+interface ScorecardMapping {
+  source_row: number;
+  opportunity_id: string;
+  reason: string;
+}
+
+interface DuplicateSelection {
+  source: string;
+  opportunity_id: string;
+  selected_source_row: number;
+  reason: string;
+}
+
+interface RecordOverride {
+  source: string;
+  source_row?: number;
+  record_id: string;
+  field: string;
+  value: string;
+  reason: string;
+}
+
+interface ResolutionsData {
+  scorecard_mappings: ScorecardMapping[];
+  duplicate_selections: DuplicateSelection[];
+  record_overrides: RecordOverride[];
+}
+
+interface ResolutionDraft {
+  opportunityId?: string;
+  selectedRow?: string;
+  field?: string;
+  value?: string;
+  reason?: string;
+}
+
+const emptyResolutions = (): ResolutionsData => ({
+  scorecard_mappings: [],
+  duplicate_selections: [],
+  record_overrides: [],
+});
+
+const overrideFields = [
+  "Fiscal_Period",
+  "Health_System",
+  "Company_Name",
+  "Product",
+  "Stage",
+  "Deal_Stage",
+  "Stage_Probability",
+  "Amount",
+  "Billing_Frequency",
+  "Close_Date",
+  "Expected_Close_Date",
+  "Sales_Rep",
+  "AE_Owner",
+  "Days_In_Stage",
+];
 
 const movementLabels: Record<string, string> = {
   new_deals: "New deals",
@@ -217,36 +281,316 @@ function ErrorState({ message }: { message: string }) {
   );
 }
 
+function parseResolutions(value: unknown): ResolutionsData {
+  if (!value || typeof value !== "object") throw new Error("The file must contain a JSON object.");
+  const object = value as Record<string, unknown>;
+  for (const key of ["scorecard_mappings", "duplicate_selections", "record_overrides"]) {
+    if (!Array.isArray(object[key])) throw new Error(`${key} must be a JSON array.`);
+  }
+  return {
+    scorecard_mappings: object.scorecard_mappings as ScorecardMapping[],
+    duplicate_selections: object.duplicate_selections as DuplicateSelection[],
+    record_overrides: object.record_overrides as RecordOverride[],
+  };
+}
+
+function evidenceObject(issue: ReviewIssue): Record<string, unknown> {
+  return issue.evidence && typeof issue.evidence === "object" && !Array.isArray(issue.evidence)
+    ? issue.evidence as Record<string, unknown>
+    : {};
+}
+
+function candidateOptions(issue: ReviewIssue): { opportunity_id: string; hospital: string; product: string; sales_rep: string; name_similarity: number }[] {
+  const candidates = evidenceObject(issue).candidates;
+  return Array.isArray(candidates) ? candidates as ReturnType<typeof candidateOptions> : [];
+}
+
+function suggestedOverrideFields(issue: ReviewIssue): string[] {
+  const message = issue.message.toLowerCase();
+  const matches: string[] = [];
+  const add = (field: string, ...phrases: string[]) => {
+    if (phrases.some((phrase) => message.includes(phrase))) matches.push(field);
+  };
+  add("Amount", "amount");
+  add("Stage_Probability", "stage_probability");
+  add("Billing_Frequency", "billing_frequency", "billing frequency");
+  add("Fiscal_Period", "fiscal_period");
+  add("Stage", "salesforce stage");
+  add("Deal_Stage", "deal_stage");
+  return [...new Set(matches)].filter((field) => overrideFields.includes(field));
+}
+
+function issueKind(issue: ReviewIssue): "mapping" | "override" | "duplicate" | "remove" | "source" {
+  if (issue.type === "missing_scorecard_id" && candidateOptions(issue).length) return "mapping";
+  if (["invalid_salesforce_record", "invalid_carebridge_record"].includes(issue.type) && issue.record_id && suggestedOverrideFields(issue).length) return "override";
+  if (issue.type === "conflicting_duplicate" && issue.record_id && issue.source_rows.length) return "duplicate";
+  if ([
+    "invalid_resolution",
+    "invalid_record_override",
+    "invalid_duplicate_resolution",
+    "stale_record_override",
+    "stale_duplicate_resolution",
+    "invalid_scorecard_mapping",
+    "stale_scorecard_mapping",
+  ].includes(issue.type)) return "remove";
+  return "source";
+}
+
+function resolutionCount(resolutions: ResolutionsData) {
+  return resolutions.scorecard_mappings.length + resolutions.duplicate_selections.length + resolutions.record_overrides.length;
+}
+
+function ReviewPage({ review }: { review: ReviewData }) {
+  const [resolutions, setResolutions] = useState<ResolutionsData>(emptyResolutions());
+  const [drafts, setDrafts] = useState<Record<string, ResolutionDraft>>({});
+  const [removedIssues, setRemovedIssues] = useState<Set<string>>(new Set());
+  const [resolutionStatus, setResolutionStatus] = useState("Loading the existing resolutions…");
+  const [resolutionError, setResolutionError] = useState("");
+
+  useEffect(() => {
+    fetch("/resolutions.json")
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then((value) => {
+        const parsed = parseResolutions(value);
+        setResolutions(parsed);
+        setResolutionStatus(`Loaded ${resolutionCount(parsed)} existing decision${resolutionCount(parsed) === 1 ? "" : "s"}`);
+      })
+      .catch((error: Error) => {
+        setResolutionError(`Could not load the existing resolutions.json (${error.message}). Choose the file below before downloading.`);
+        setResolutionStatus("Existing resolutions not loaded");
+      });
+  }, []);
+
+  const updateDraft = (issueId: string, change: Partial<ResolutionDraft>) => {
+    setDrafts((current) => ({ ...current, [issueId]: { ...current[issueId], ...change } }));
+  };
+
+  const loadResolutionFile = (file?: File) => {
+    if (!file) return;
+    file.text()
+      .then((text) => parseResolutions(JSON.parse(text)))
+      .then((parsed) => {
+        setResolutions(parsed);
+        setResolutionError("");
+        setResolutionStatus(`Loaded ${resolutionCount(parsed)} existing decision${resolutionCount(parsed) === 1 ? "" : "s"} from ${file.name}`);
+      })
+      .catch((error: Error) => setResolutionError(`That file could not be used: ${error.message}`));
+  };
+
+  const draftIsComplete = (issue: ReviewIssue) => {
+    const draft = drafts[issue.issue_id] ?? {};
+    const kind = issueKind(issue);
+    if (kind === "mapping") return Boolean(draft.opportunityId && draft.reason?.trim());
+    if (kind === "override") return Boolean(draft.field && draft.value !== undefined && draft.value !== "" && draft.reason?.trim());
+    if (kind === "duplicate") return Boolean(draft.selectedRow && draft.reason?.trim());
+    return kind === "remove" && removedIssues.has(issue.issue_id);
+  };
+
+  const completedIssues = review.issues.filter(draftIsComplete);
+
+  const buildDownload = () => {
+    let next: ResolutionsData = {
+      scorecard_mappings: [...resolutions.scorecard_mappings],
+      duplicate_selections: [...resolutions.duplicate_selections],
+      record_overrides: [...resolutions.record_overrides],
+    };
+
+    for (const issue of review.issues) {
+      const kind = issueKind(issue);
+      const draft = drafts[issue.issue_id] ?? {};
+      if (kind === "remove" && removedIssues.has(issue.issue_id)) {
+        const rawEvidence = evidenceObject(issue);
+        const target = rawEvidence.override && typeof rawEvidence.override === "object" ? rawEvidence.override : issue.evidence;
+        const targetJson = JSON.stringify(target);
+        next = {
+          scorecard_mappings: next.scorecard_mappings.filter((item) => JSON.stringify(item) !== targetJson),
+          duplicate_selections: next.duplicate_selections.filter((item) => JSON.stringify(item) !== targetJson),
+          record_overrides: next.record_overrides.filter((item) => JSON.stringify(item) !== targetJson),
+        };
+      }
+      if (!draftIsComplete(issue)) continue;
+      if (kind === "mapping") {
+        const mapping: ScorecardMapping = {
+          source_row: issue.source_rows[0],
+          opportunity_id: draft.opportunityId!,
+          reason: draft.reason!.trim(),
+        };
+        next.scorecard_mappings = [...next.scorecard_mappings.filter((item) => item.source_row !== mapping.source_row), mapping];
+      }
+      if (kind === "override") {
+        const override: RecordOverride = {
+          source: issue.source,
+          record_id: issue.record_id!,
+          field: draft.field!,
+          value: draft.value!,
+          reason: draft.reason!.trim(),
+          ...(issue.source_rows.length === 1 ? { source_row: issue.source_rows[0] } : {}),
+        };
+        next.record_overrides = [
+          ...next.record_overrides.filter((item) => !(
+            item.source === override.source && item.record_id === override.record_id && item.field === override.field && item.source_row === override.source_row
+          )),
+          override,
+        ];
+      }
+      if (kind === "duplicate") {
+        const selection: DuplicateSelection = {
+          source: issue.source,
+          opportunity_id: issue.record_id!,
+          selected_source_row: Number(draft.selectedRow),
+          reason: draft.reason!.trim(),
+        };
+        next.duplicate_selections = [
+          ...next.duplicate_selections.filter((item) => !(
+            item.source === selection.source && item.opportunity_id === selection.opportunity_id
+          )),
+          selection,
+        ];
+      }
+    }
+
+    const blob = new Blob([`${JSON.stringify(next, null, 2)}\n`], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "resolutions.json";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <main className="review-page">
+      <header className="review-header">
+        <div className="review-brand"><span className="review-brand-mark">P</span><strong>PulseFlow pipeline review</strong></div>
+        <span className="blocked-pill"><i /> Forecast blocked</span>
+      </header>
+      <section className="review-intro">
+        <p className="eyebrow">Human review required</p>
+        <h1>{review.blocking_issue_count} {review.blocking_issue_count === 1 ? "issue is" : "issues are"} preventing a new forecast</h1>
+        <p>The previous forecast has not been replaced. Review each item below, create the supported decisions, then replace <code>config/resolutions.json</code> and rerun the pipeline.</p>
+      </section>
+
+      <div className="review-layout">
+        <section className="review-issues" aria-label="Blocking issues">
+          {review.issues.map((issue, index) => {
+            const kind = issueKind(issue);
+            const draft = drafts[issue.issue_id] ?? {};
+            const candidates = candidateOptions(issue);
+            const availableFields = suggestedOverrideFields(issue);
+            return (
+              <article className="review-card" key={issue.issue_id}>
+                <div className="review-card-number">{index + 1}</div>
+                <div className="review-card-body">
+                  <div className="review-card-top">
+                    <div><p className="card-label">{titleCase(issue.type)}</p><h2>{issue.message}</h2></div>
+                    <span className={kind === "source" ? "fix-badge source" : "fix-badge resolution"}>{kind === "source" ? "Source file" : "Resolution file"}</span>
+                  </div>
+                  <dl className="issue-location">
+                    <div><dt>File</dt><dd>{issue.source}</dd></div>
+                    <div><dt>Row</dt><dd>{issue.source_rows.join(", ") || "File-level"}</dd></div>
+                    <div><dt>Record</dt><dd>{issue.record_id || "—"}</dd></div>
+                  </dl>
+                  <p className="required-action"><strong>What to do:</strong> {issue.required_action}</p>
+
+                  {kind === "mapping" && (
+                    <div className="resolution-form">
+                      <label>Confirmed Salesforce opportunity
+                        <select value={draft.opportunityId ?? ""} onChange={(event) => updateDraft(issue.issue_id, { opportunityId: event.target.value })}>
+                          <option value="">Choose a suggested match…</option>
+                          {candidates.map((candidate) => <option key={candidate.opportunity_id} value={candidate.opportunity_id}>{candidate.hospital} · {candidate.product} · {candidate.sales_rep} ({Math.round(candidate.name_similarity * 100)}% name match)</option>)}
+                        </select>
+                      </label>
+                      <label>Reason for the decision<input value={draft.reason ?? ""} onChange={(event) => updateDraft(issue.issue_id, { reason: event.target.value })} placeholder="Example: Confirmed with the sales representative" /></label>
+                    </div>
+                  )}
+
+                  {kind === "override" && (
+                    <div className="resolution-form override-form">
+                      <label>Column to correct
+                        <select value={draft.field ?? ""} onChange={(event) => updateDraft(issue.issue_id, { field: event.target.value })}>
+                          <option value="">Choose a column…</option>
+                          {availableFields.map((field) => <option key={field}>{field}</option>)}
+                        </select>
+                      </label>
+                      <label>Correct value<input value={draft.value ?? ""} onChange={(event) => updateDraft(issue.issue_id, { value: event.target.value })} placeholder="Enter the confirmed value" /></label>
+                      <label>Reason for the correction<input value={draft.reason ?? ""} onChange={(event) => updateDraft(issue.issue_id, { reason: event.target.value })} placeholder="Who confirmed this value?" /></label>
+                    </div>
+                  )}
+
+                  {kind === "duplicate" && (
+                    <div className="resolution-form">
+                      <label>Authoritative source row<select value={draft.selectedRow ?? ""} onChange={(event) => updateDraft(issue.issue_id, { selectedRow: event.target.value })}><option value="">Choose a row…</option>{issue.source_rows.map((row) => <option key={row} value={row}>Row {row}</option>)}</select></label>
+                      <label>Reason for the decision<input value={draft.reason ?? ""} onChange={(event) => updateDraft(issue.issue_id, { reason: event.target.value })} placeholder="How was this row confirmed?" /></label>
+                    </div>
+                  )}
+
+                  {kind === "remove" && (
+                    <label className="remove-resolution"><input type="checkbox" checked={removedIssues.has(issue.issue_id)} onChange={(event) => setRemovedIssues((current) => { const next = new Set(current); if (event.target.checked) next.add(issue.issue_id); else next.delete(issue.issue_id); return next; })} /> Remove this invalid or outdated decision from the downloaded resolutions file</label>
+                  )}
+
+                  {kind === "source" && <p className="source-note">This issue cannot be safely represented in <code>resolutions.json</code>. Correct the named input file, then rerun the pipeline.</p>}
+                  <details className="evidence-details"><summary>Show pipeline evidence</summary><pre>{JSON.stringify(issue.evidence, null, 2)}</pre></details>
+                </div>
+              </article>
+            );
+          })}
+        </section>
+
+        <aside className="resolution-panel">
+          <p className="card-label">Resolution file</p>
+          <h2>Create resolutions.json</h2>
+          <p className="resolution-status">{resolutionStatus}</p>
+          {resolutionError && <p className="resolution-error">{resolutionError}</p>}
+          <label className="file-picker">Choose existing resolutions.json<input type="file" accept="application/json,.json" onChange={(event) => loadResolutionFile(event.target.files?.[0])} /></label>
+          <div className="resolution-tally"><strong>{completedIssues.length}</strong><span>corrections ready<br />of {review.blocking_issue_count} blockers</span></div>
+          <button className="download-button" disabled={!completedIssues.length || Boolean(resolutionError)} onClick={buildDownload}>Download resolutions.json</button>
+          <ol className="next-steps"><li>Download the completed file.</li><li>Replace <code>config/resolutions.json</code>.</li><li>Run <code>python3 pipeline/process_data.py</code>.</li><li>Refresh this page.</li></ol>
+          <p className="panel-footnote">Existing valid decisions are preserved in the downloaded file. Source-only issues must still be corrected in the input file.</p>
+        </aside>
+      </div>
+    </main>
+  );
+}
+
 export default function App() {
+  const [review, setReview] = useState<ReviewData | null>(null);
   const [data, setData] = useState<ForecastData | null>(null);
   const [loadError, setLoadError] = useState("");
   const [tab, setTab] = useState<Tab>("overview");
   const [scoreOverrides, setScoreOverrides] = useState<Record<string, Top8Scores>>({});
   const [bucketOverrides, setBucketOverrides] = useState<Record<string, Bucket>>({});
-  const [variantSelections, setVariantSelections] = useState<Record<string, number>>({});
   const [productFilter, setProductFilter] = useState("All products");
   const [repFilter, setRepFilter] = useState("All reps");
   const [movementTab, setMovementTab] = useState("new_deals");
   const [auditFilter, setAuditFilter] = useState("all");
 
   useEffect(() => {
-    fetch("/forecast.json")
+    fetch("/review.json")
       .then((response) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.json();
       })
-      .then(setData)
+      .then((reviewData: ReviewData) => {
+        setReview(reviewData);
+        if (reviewData.blocking_issue_count > 0) return null;
+        return fetch("/forecast.json")
+          .then((response) => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.json();
+          })
+          .then(setData);
+      })
       .catch((error: Error) => setLoadError(error.message));
   }, []);
 
   const scenarioDeals = useMemo<ScenarioDeal[]>(() => {
     if (!data) return [];
     return data.deals.map((baseDeal) => {
-      const selectedRow = variantSelections[baseDeal.opportunity_id];
-      const variant = baseDeal.source_conflict?.variants.find((item) => item.source_row === selectedRow);
-      const annualAcv = variant?.annual_acv ?? baseDeal.annual_acv;
-      const stageProbability = variant?.stage_probability ?? baseDeal.stage_probability;
-      const stage = variant?.stage ?? baseDeal.stage;
+      const annualAcv = baseDeal.annual_acv;
+      const stageProbability = baseDeal.stage_probability;
       const scenarioBucket = bucketOverrides[baseDeal.opportunity_id] ?? baseDeal.forecast_bucket;
       const defaultScores = baseDeal.top_8_scores ?? {
         leadership: 3,
@@ -266,9 +610,6 @@ export default function App() {
       const scenarioProbability = scenarioBucket === "top_8" ? calculation.probability : stageProbability;
       return {
         ...baseDeal,
-        source_row: variant?.source_row ?? baseDeal.source_row,
-        stage,
-        stage_probability: stageProbability,
         annual_acv: annualAcv,
         scenario_bucket: scenarioBucket,
         scenario_scores: scenarioScores,
@@ -276,7 +617,7 @@ export default function App() {
         scenario_expected_value: annualAcv * scenarioProbability,
       };
     });
-  }, [data, bucketOverrides, scoreOverrides, variantSelections]);
+  }, [data, bucketOverrides, scoreOverrides]);
 
   const scenarioSummary = useMemo(() => {
     const top8 = scenarioDeals
@@ -293,8 +634,7 @@ export default function App() {
 
   const hasScenario =
     Object.keys(scoreOverrides).length > 0 ||
-    Object.keys(bucketOverrides).length > 0 ||
-    Object.keys(variantSelections).length > 0;
+    Object.keys(bucketOverrides).length > 0;
 
   const filteredDeals = useMemo(
     () =>
@@ -309,7 +649,6 @@ export default function App() {
   const resetScenario = () => {
     setScoreOverrides({});
     setBucketOverrides({});
-    setVariantSelections({});
   };
 
   const changeScore = (deal: ScenarioDeal, field: "leadership" | "commercial" | "contractual", value: number) => {
@@ -349,6 +688,7 @@ export default function App() {
   };
 
   if (loadError) return <ErrorState message={loadError} />;
+  if (review?.blocking_issue_count) return <ReviewPage review={review} />;
   if (!data) return <LoadingState />;
 
   const products = ["All products", ...Array.from(new Set(data.deals.map((deal) => deal.product))).sort()];
@@ -446,12 +786,10 @@ export default function App() {
                 <div className="confidence-icon">◇</div>
                 <div>
                   <p className="card-label">Baseline confidence</p>
-                  <strong>{data.summary.unresolved_variant_count === 0 ? "Fully reconciled" : "One bounded conflict"}</strong>
-                  <p>{data.summary.unresolved_variant_count === 0
-                    ? "All source decisions are confirmed."
-                    : "The conservative baseline is valid; one source variant remains explorable."}</p>
+                  <strong>Fully reconciled</strong>
+                  <p>Every conflicting duplicate has one confirmed source row.</p>
                 </div>
-                <button onClick={() => setTab(data.summary.unresolved_variant_count ? "deals" : "audit")}>Review evidence →</button>
+                <button onClick={() => setTab("audit")}>Review evidence →</button>
               </article>
             </section>
 
@@ -579,11 +917,10 @@ export default function App() {
                 </thead>
                 <tbody>
                   {filteredDeals.map((deal) => (
-                    <tr key={deal.opportunity_id} className={deal.source_conflict ? "conflict-row" : ""}>
+                    <tr key={deal.opportunity_id}>
                       <td>
                         <strong>{deal.health_system}</strong>
                         <small>{deal.product} · {deal.sales_rep}</small>
-                        {deal.source_conflict && <span className="inline-warning">Source conflict</span>}
                       </td>
                       <td><span className={`bucket-pill ${deal.scenario_bucket}`}>{bucketLabels[deal.scenario_bucket]}</span></td>
                       <td className="money-cell">{money.format(deal.annual_acv)}</td>
@@ -600,20 +937,6 @@ export default function App() {
                             ))}
                             <b>GPA {deal.scenario_scores?.composite_gpa.toFixed(2)}</b>
                           </div>
-                        ) : deal.source_conflict ? (
-                          <label className="variant-select">
-                            <span>Forecast variant</span>
-                            <select
-                              value={variantSelections[deal.opportunity_id] ?? deal.source_conflict.baseline_source_row}
-                              onChange={(event) => setVariantSelections((current) => ({ ...current, [deal.opportunity_id]: Number(event.target.value) }))}
-                            >
-                              {deal.source_conflict.variants.map((variant) => (
-                                <option key={variant.source_row} value={variant.source_row}>
-                                  {money.format(variant.annual_acv)} · {variant.stage} · {percent.format(variant.stage_probability)}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
                         ) : <span className="stage-copy">{deal.stage}<small>{percent.format(deal.stage_probability)} source probability</small></span>}
                       </td>
                       <td><strong>{percent.format(deal.scenario_probability)}</strong></td>
@@ -671,7 +994,6 @@ export default function App() {
                 ["automatically_resolved", "Automatic", "Deterministic pipeline rules"],
                 ["human_resolved", "Human confirmed", "Validated resolutions"],
                 ["warning", "Warnings", "Retained with evidence"],
-                ["unresolved", "Unresolved", "Bounded forecast variants"],
               ].map(([status, label, description]) => (
                 <button key={status} className={auditFilter === status ? `active ${status}` : status} onClick={() => setAuditFilter(auditFilter === status ? "all" : status)}>
                   <span>{label}</span>

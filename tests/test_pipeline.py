@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from pipeline.process_data import build_outputs, build_week_over_week
+from tests.fixture_factory import make_scenario_dataset
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -29,12 +30,14 @@ def movement_record(record_id: str, **overrides) -> dict:
     return record
 
 
-def test_t01_supplied_data_builds_complete_forecast() -> None:
-    review, forecast = build_outputs(ROOT)
+def test_t01_supplied_data_builds_complete_forecast(tmp_path) -> None:
+    root = make_scenario_dataset(tmp_path / "complete-forecast", "clean")
+
+    review, forecast = build_outputs(root)
 
     assert review["status"] == "clear"
     assert forecast is not None
-    assert sum(deal["forecast_bucket"] == "top_8" for deal in forecast["deals"]) == 8
+    assert sum(deal["forecast_bucket"] == "top_8" for deal in forecast["deals"]) == 1
     assert all(0 <= deal["probability"] <= 1 for deal in forecast["deals"])
     assert all(deal["annual_acv"] >= 0 for deal in forecast["deals"])
 
@@ -108,67 +111,121 @@ def test_t32_active_q4_acv_change_reports_amount_and_direction() -> None:
     assert change["direction"] == "increase"
 
 
-def test_t33_confirmed_scorecard_mappings_are_applied_and_audited() -> None:
-    review, forecast = build_outputs(ROOT)
+def test_t33_confirmed_scorecard_mappings_are_applied_and_audited(tmp_path) -> None:
+    root = make_scenario_dataset(
+        tmp_path / "confirmed-scorecard-mapping",
+        "missing_scorecard_id_identity_mismatch",
+    )
+    resolutions = {
+        "scorecard_mappings": [
+            {
+                "source_row": 5,
+                "opportunity_id": "006TEST00000001AAA",
+                "reason": "Confirmed by test owner",
+            }
+        ],
+        "duplicate_selections": [],
+        "record_overrides": [],
+    }
+
+    review, forecast = build_outputs(root, resolutions_override=resolutions)
 
     assert review["status"] == "clear"
     assert review["issues"] == []
     assert "scorecard_mapping_reviews" not in review
     assert forecast is not None
     mappings = [entry for entry in forecast["audit_log"] if entry["type"] == "missing_scorecard_id"]
-    assert len(mappings) == 4
+    assert len(mappings) == 1
     assert all(entry["status"] == "human_resolved" for entry in mappings)
     assert all(entry["resolution_source"] == "config/resolutions.json" for entry in mappings)
-    assert {entry["source_rows"][0] for entry in mappings} == {9, 10, 11, 12}
+    assert mappings[0]["source_rows"] == [5]
+    assert mappings[0]["record_id"] == "006TEST00000001AAA"
 
 
-def test_t34_confirmed_duplicate_selection_uses_selected_row_and_is_audited() -> None:
-    resolutions = valid_resolutions()
-    resolutions["duplicate_selections"] = [
-        {
-            "opportunity_id": "006PF000001L008YAC",
-            "selected_source_row": 11,
-            "reason": "Confirmed by test owner",
-        }
-    ]
+def test_t34_confirmed_duplicate_selection_uses_selected_row_and_is_audited(tmp_path) -> None:
+    root = make_scenario_dataset(tmp_path / "resolved-duplicate", "two_conflicting_duplicates")
+    resolutions = {
+        "scorecard_mappings": [],
+        "duplicate_selections": [
+            {
+                "source": "1_sfdc_pipeline_current.csv",
+                "opportunity_id": "006TEST00000002AAA",
+                "selected_source_row": 4,
+                "reason": "Confirmed by test owner",
+            }
+        ],
+        "record_overrides": [],
+    }
 
-    review, forecast = build_outputs(ROOT, resolutions_override=resolutions)
+    review, forecast = build_outputs(root, resolutions_override=resolutions)
 
     assert review["status"] == "clear"
     assert forecast is not None
-    deal = next(item for item in forecast["deals"] if item["opportunity_id"] == "006PF000001L008YAC")
-    assert deal["expected_value"] == 440_000
+    deal = next(item for item in forecast["deals"] if item["opportunity_id"] == "006TEST00000002AAA")
+    assert deal["expected_value"] == 160_000
     assert deal["source_conflict"] is None
     audit = next(
         item
         for item in forecast["audit_log"]
-        if item["type"] == "conflicting_duplicate" and item["record_id"] == "006PF000001L008YAC"
+        if item["type"] == "conflicting_duplicate" and item["record_id"] == "006TEST00000002AAA"
     )
     assert audit["status"] == "human_resolved"
     assert audit["resolution_source"] == "config/resolutions.json"
 
 
-def test_t35_confirmed_record_override_is_applied_and_audited() -> None:
-    resolutions = valid_resolutions()
-    resolutions["record_overrides"] = [
-        {
-            "source": "1_sfdc_pipeline_current.csv",
-            "record_id": "006PF000001L001YAC",
-            "field": "Amount",
-            "value": 500000,
-            "reason": "Confirmed test correction",
-        }
-    ]
+def test_t34_prior_duplicate_selection_controls_week_over_week_comparison(tmp_path) -> None:
+    root = make_scenario_dataset(tmp_path / "resolved-prior-duplicate", "prior_conflicting_duplicates")
+    resolutions = {
+        "scorecard_mappings": [],
+        "duplicate_selections": [
+            {
+                "source": "2_sfdc_pipeline_prior_week.csv",
+                "opportunity_id": "006TEST00000002AAA",
+                "selected_source_row": 4,
+                "reason": "Confirmed prior-week source row",
+            }
+        ],
+        "record_overrides": [],
+    }
 
-    review, forecast = build_outputs(ROOT, resolutions_override=resolutions)
+    review, forecast = build_outputs(root, resolutions_override=resolutions)
 
     assert review["status"] == "clear"
     assert forecast is not None
-    deal = next(item for item in forecast["deals"] if item["opportunity_id"] == "006PF000001L001YAC")
+    stage_move = forecast["week_over_week"]["stage_moves"][0]
+    assert stage_move["prior_stage"] == "Contract Negotiations"
+    assert stage_move["current_stage"] == "Business Approval"
+    assert stage_move["direction"] == "regressed"
+    acv_change = forecast["week_over_week"]["acv_changes"][0]
+    assert acv_change["prior_annual_acv"] == 200_000
+    assert acv_change["current_annual_acv"] == 100_000
+
+
+def test_t35_confirmed_record_override_is_applied_and_audited(tmp_path) -> None:
+    root = make_scenario_dataset(tmp_path / "confirmed-record-override", "clean")
+    resolutions = {
+        "scorecard_mappings": [],
+        "duplicate_selections": [],
+        "record_overrides": [
+            {
+                "source": "1_sfdc_pipeline_current.csv",
+                "record_id": "006TEST00000002AAA",
+                "field": "Amount",
+                "value": 500000,
+                "reason": "Confirmed test correction",
+            }
+        ],
+    }
+
+    review, forecast = build_outputs(root, resolutions_override=resolutions)
+
+    assert review["status"] == "clear"
+    assert forecast is not None
+    deal = next(item for item in forecast["deals"] if item["opportunity_id"] == "006TEST00000002AAA")
     assert deal["annual_acv"] == 500_000
     audit = next(item for item in forecast["audit_log"] if item["type"] == "manual_record_override")
     assert audit["status"] == "human_resolved"
-    assert audit["original_value"] == {"field": "Amount", "value": "450000"}
+    assert audit["original_value"] == {"field": "Amount", "value": "100000"}
     assert audit["resulting_value"] == {"field": "Amount", "value": 500000}
 
 
@@ -189,6 +246,29 @@ def test_t36_stale_resolution_blocks_publication() -> None:
     assert review["status"] == "blocked"
     assert forecast is None
     assert any(issue["type"] == "stale_record_override" for issue in review["issues"])
+
+
+def test_t36_duplicate_selection_requires_source_filename(tmp_path) -> None:
+    root = make_scenario_dataset(tmp_path / "duplicate-missing-source", "two_conflicting_duplicates")
+    resolutions = {
+        "scorecard_mappings": [],
+        "duplicate_selections": [
+            {
+                "opportunity_id": "006TEST00000002AAA",
+                "selected_source_row": 4,
+                "reason": "Missing source on purpose",
+            }
+        ],
+        "record_overrides": [],
+    }
+
+    review, forecast = build_outputs(root, resolutions_override=resolutions)
+
+    assert review["status"] == "blocked"
+    assert forecast is None
+    issue = next(item for item in review["issues"] if item["type"] == "invalid_duplicate_resolution")
+    assert issue["source"] == "config/resolutions.json"
+    assert "source" in issue["message"]
 
 
 def test_t36_scorecard_mapping_without_reason_blocks_publication() -> None:
